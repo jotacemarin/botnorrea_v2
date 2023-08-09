@@ -1,0 +1,19 @@
+plugins:
+  - serverless-esbuild
+
+custom:
+  secrets: ${file(./config/${opt:stage, 'dev'}.json)}
+
+service: ${self:custom.secrets.service.name}
+
+frameworkVersion: "3"
+
+provider:
+  name: ${self:custom.secrets.provider.name}
+  runtime: ${self:custom.secrets.provider.runtime}
+  stage: ${opt:stage, 'dev'}
+  region: ${self:custom.secrets.provider.region}
+  environment:
+    BOT_NAME: ${self:custom.secrets.provider.environment.BOT_NAME}
+
+functions: ${self:custom.secrets.functions}

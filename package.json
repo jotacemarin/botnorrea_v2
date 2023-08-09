@@ -1,0 +1,31 @@
+{
+  "name": "botnorrea-v2",
+  "version": "1.0.0",
+  "description": "Botnorrea v2 core",
+  "main": "index.js",
+  "scripts": {
+    "test": "test",
+    "local:handler": "sls invoke local -f handler -p mock_events/event_handler.json --stage dev",
+    "local:dummy": "sls invoke local -f dummy -p mock_events/event_dummy.json --stage dev"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jotacemarin/botnorrea-v2.git"
+  },
+  "keywords": [
+    "botnorrea"
+  ],
+  "author": "jotacemarin@gmail.com",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jotacemarin/botnorrea-v2/issues"
+  },
+  "homepage": "https://github.com/jotacemarin/botnorrea-v2#readme",
+  "dependencies": {
+    "http-status": "1.6.2"
+  },
+  "devDependencies": {
+    "esbuild": "^0.17.19",
+    "serverless-esbuild": "^1.46.0"
+  }
+}
