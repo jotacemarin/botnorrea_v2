@@ -1,2 +1,2 @@
 export { handler } from "./src/handler";
-export { dummy } from "./src/dummy"
+export { dummy } from "./src/dummy";

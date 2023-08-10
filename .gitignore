@@ -4,5 +4,11 @@ jspm_packages
 
 # Serverless directories
 .serverless
+
+# ES builds
+.esbuild
+.build
+
+# Secret files
 config/dev.json
 config/prod.json

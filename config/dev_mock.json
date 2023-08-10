@@ -10,43 +10,5 @@
     "environment": {
       "BOT_NAME": "botnorrea"
     }
-  },
-  "functions": [
-    {
-      "handler": {
-        "name": "botnorrea-v2-handler",
-        "handler": "index.handler",
-        "memorySize": 128,
-        "timeout": 30,
-        "reservedConcurrency": 20,
-        "events": [
-          {
-            "http": {
-              "path": "/handler",
-              "method": "POST",
-              "cors": true
-            }
-          }
-        ]
-      }
-    },
-    {
-      "dummy": {
-        "name": "botnorrea-v2-dummy",
-        "handler": "index.dummy",
-        "memorySize": 128,
-        "timeout": 30,
-        "reservedConcurrency": 20,
-        "events": [
-          {
-            "http": {
-              "path": "/dummy",
-              "method": "POST",
-              "cors": true
-            }
-          }
-        ]
-      }
-    }
-  ]
+  }
 }

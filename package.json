@@ -5,6 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "test",
+    "dev:deploy": "sls deploy --stage dev --verbose",
+    "dev:destroy": "sls remove --stage dev --verbose",
     "local:handler": "sls invoke local -f handler -p mock_events/event_handler.json --stage dev",
     "local:dummy": "sls invoke local -f dummy -p mock_events/event_dummy.json --stage dev"
   },
@@ -13,7 +15,7 @@
     "url": "git+https://github.com/jotacemarin/botnorrea-v2.git"
   },
   "keywords": [
-    "botnorrea"
+    "botnorrea-v2"
   ],
   "author": "jotacemarin@gmail.com",
   "license": "MIT",
@@ -25,7 +27,10 @@
     "http-status": "1.6.2"
   },
   "devDependencies": {
-    "esbuild": "^0.17.19",
-    "serverless-esbuild": "^1.46.0"
+    "@types/aws-lambda": "8.10.119",
+    "@types/aws-sdk": "2.7.0",
+    "@types/node": "20.4.9",
+    "esbuild": "0.17.19",
+    "serverless-esbuild": "1.46.0"
   }
 }

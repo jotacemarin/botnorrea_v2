@@ -11,9 +11,11 @@ frameworkVersion: "3"
 provider:
   name: ${self:custom.secrets.provider.name}
   runtime: ${self:custom.secrets.provider.runtime}
-  stage: ${opt:stage, 'dev'}
+  stage: ${opt:stage, self:custom.secrets.provider.stage 'dev'}
   region: ${self:custom.secrets.provider.region}
   environment:
-    BOT_NAME: ${self:custom.secrets.provider.environment.BOT_NAME}
+    BOT_NAME: ${self:custom.secrets.provider.environment.BOT_NAME}-${self:custom.secrets.provider.stage}
 
-functions: ${self:custom.secrets.functions}
+functions:
+  dummy: ${file(./src/dummy/function.yml)}
+  handler: ${file(./src/handler/function.yml)}
