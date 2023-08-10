@@ -15,7 +15,9 @@ provider:
   region: ${self:custom.secrets.provider.region}
   environment:
     BOT_NAME: ${self:custom.secrets.provider.environment.BOT_NAME}-${self:custom.secrets.provider.stage}
+    TELEGRAM_BOT_TOKEN: ${self:custom.secrets.provider.environment.TELEGRAM_BOT_TOKEN}
 
 functions:
-  dummy: ${file(./src/dummy/function.yml)}
-  handler: ${file(./src/handler/function.yml)}
+  dummy: ${file(./src/functions/dummy/function.yml)}
+  handler: ${file(./src/functions/handler/function.yml)}
+  telegramSetWebhook: ${file(./src/functions/telegram_set_webhook/function.yml)}

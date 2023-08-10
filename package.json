@@ -8,7 +8,8 @@
     "dev:deploy": "sls deploy --stage dev --verbose",
     "dev:destroy": "sls remove --stage dev --verbose",
     "local:handler": "sls invoke local -f handler -p mock_events/event_handler.json --stage dev",
-    "local:dummy": "sls invoke local -f dummy -p mock_events/event_dummy.json --stage dev"
+    "local:dummy": "sls invoke local -f dummy -p mock_events/event_dummy.json --stage dev",
+    "local:telegramSetWebhook": "sls invoke local -f telegramSetWebhook -p mock_events/event_telegram_set_webhook.json --stage dev"
   },
   "repository": {
     "type": "git",
@@ -24,6 +25,7 @@
   },
   "homepage": "https://github.com/jotacemarin/botnorrea-v2#readme",
   "dependencies": {
+    "axios": "1.4.0",
     "http-status": "1.6.2"
   },
   "devDependencies": {
