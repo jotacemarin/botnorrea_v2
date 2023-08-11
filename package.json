@@ -4,11 +4,12 @@
   "description": "Botnorrea v2 core",
   "main": "index.js",
   "scripts": {
-    "test": "test",
+    "test": "jest",
     "dev:deploy": "sls deploy --stage dev --verbose",
     "dev:destroy": "sls remove --stage dev --verbose",
     "local:handler": "sls invoke local -f handler -p mock_events/event_handler.json --stage dev",
-    "local:dummy": "sls invoke local -f dummy -p mock_events/event_dummy.json --stage dev"
+    "local:dummy": "sls invoke local -f dummy -p mock_events/event_dummy.json --stage dev",
+    "local:telegramSetWebhook": "sls invoke local -f telegramSetWebhook -p mock_events/event_telegram_set_webhook.json --stage dev"
   },
   "repository": {
     "type": "git",
@@ -24,13 +25,18 @@
   },
   "homepage": "https://github.com/jotacemarin/botnorrea-v2#readme",
   "dependencies": {
+    "axios": "1.4.0",
     "http-status": "1.6.2"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.22.10",
+    "@babel/preset-typescript": "^7.22.5",
     "@types/aws-lambda": "8.10.119",
     "@types/aws-sdk": "2.7.0",
+    "@types/jest": "^29.5.3",
     "@types/node": "20.4.9",
     "esbuild": "0.17.19",
+    "jest": "29.6.2",
     "serverless-esbuild": "1.46.0"
   }
 }
