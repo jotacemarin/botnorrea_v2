@@ -28,6 +28,7 @@ export interface DynamoDBCommand {
   ReturnValues?: string;
   ProjectionExpression?: string;
   ExpressionAttributeNames?: DynamoDBKey | JSON | Object | any;
+  ExpressionAttributeValues?: DynamoDBKey | JSON | Object | any;
   KeyConditionExpression?: string;
   ConsistentRead?: boolean;
 }

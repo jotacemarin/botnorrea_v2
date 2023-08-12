@@ -31,21 +31,17 @@ export const execute = async (
 
 export const telegramSetWebhook = async (
   event: APIGatewayEvent,
-  context: Context,
+  _context: Context,
   callback: Callback
 ): Promise<void> => {
   try {
-    const contextCustom = event.requestContext.authorizer ?? {};
+    const contextCustom = event?.requestContext?.authorizer ?? {};
     const user: User = JSON.parse(contextCustom["Botnorrea-v2"] ?? {});
-    if (![Role.ROOT, Role.ADMIN].includes(user?.role)) {
+    if (user?.role && ![Role.ROOT, Role.ADMIN].includes(user?.role)) {
       throw new Error("Unauthorized");
     }
   } catch (error) {
-    return callback(null, {
-      statusCode: UNAUTHORIZED,
-      headers: { "Content-Type": "text/plain" },
-      body: error.message,
-    });
+    return callback(null, { statusCode: UNAUTHORIZED });
   }
 
   if (!event?.body) {

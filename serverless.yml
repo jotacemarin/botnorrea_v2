@@ -40,3 +40,4 @@ functions:
   dummy: ${file(./src/functions/dummy/function.yml)}
   handler: ${file(./src/functions/handler/function.yml)}
   telegramSetWebhook: ${file(./src/functions/telegram_set_webhook/function.yml)}
+  dynamoDBUsersCrud: ${file(./src/functions/dynamo_users_crud/function.yml)}
