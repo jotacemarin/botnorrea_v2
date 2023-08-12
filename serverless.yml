@@ -11,13 +11,32 @@ frameworkVersion: "3"
 provider:
   name: ${self:custom.secrets.provider.name}
   runtime: ${self:custom.secrets.provider.runtime}
-  stage: ${opt:stage, self:custom.secrets.provider.stage 'dev'}
+  stage: ${self:custom.secrets.provider.stage, 'dev'}
   region: ${self:custom.secrets.provider.region}
   environment:
-    BOT_NAME: ${self:custom.secrets.provider.environment.BOT_NAME}-${self:custom.secrets.provider.stage}
+    STAGE: ${self:provider.stage}
+    REGION: ${self:provider.region}
+    BOT_NAME: ${self:custom.secrets.provider.environment.BOT_NAME}-${self:provider.stage}
     TELEGRAM_BOT_TOKEN: ${self:custom.secrets.provider.environment.TELEGRAM_BOT_TOKEN}
+    DYNAMODB_TABLE_USERS: ${self:provider.environment.BOT_NAME}-${self:custom.secrets.provider.environment.DYNAMODB_TABLE_USERS}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource: "arn:aws:dynamodb:${self:provider.region}:*:table/*"
+
+resources:
+  - ${file(./src/resources/dynamodb-users-table.yml)}
 
 functions:
+  authorizer: ${file(./src/functions/authorizer/function.yml)}
   dummy: ${file(./src/functions/dummy/function.yml)}
   handler: ${file(./src/functions/handler/function.yml)}
   telegramSetWebhook: ${file(./src/functions/telegram_set_webhook/function.yml)}

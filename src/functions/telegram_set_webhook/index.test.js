@@ -1,5 +1,5 @@
 import { BAD_REQUEST, OK } from "http-status";
-import { process as telegramSetWebhook } from "./index";
+import { execute as telegramSetWebhook } from "./index";
 import * as telegramServices from "../../services/telegram";
 
 describe("Services respond successfully", () => {

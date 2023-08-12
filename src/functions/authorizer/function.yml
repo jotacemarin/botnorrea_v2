@@ -1,0 +1,2 @@
+name: ${self:custom.secrets.service.name}-${self:custom.secrets.provider.stage}-authorizer
+handler: index.authorizer
