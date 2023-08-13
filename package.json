@@ -10,7 +10,8 @@
     "local:handler": "sls invoke local -f handler -p mock_events/event_handler.json --stage dev",
     "local:dummy": "sls invoke local -f dummy -p mock_events/event_dummy.json --stage dev",
     "local:telegramSetWebhook": "sls invoke local -f telegramSetWebhook -p mock_events/event_telegram_set_webhook.json --stage dev",
-    "local:createUser": "sls invoke local -f dynamoDBUsersCrud -p mock_events/event_dynamo_users_crud.json --stage dev"
+    "local:methodsUsers": "sls invoke local -f dynamoDBUsersCrud -p mock_events/event_dynamo_users_crud.json --stage dev",
+    "local:telegramWebhook": "sls invoke local -f telegramWebhook -p mock_events/event_telegram_webhook.json --stage dev"
   },
   "repository": {
     "type": "git",

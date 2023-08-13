@@ -53,6 +53,7 @@ export const telegramSetWebhook = async (
     const response = await execute(url);
     return callback(null, response);
   } catch (error) {
+    console.error(`telegram_set_webhook.telegramSetWebhook: ${error?.message}`, error);
     return callback(error, {
       statusCode: error?.statusCode ?? INTERNAL_SERVER_ERROR,
       body: error.message,

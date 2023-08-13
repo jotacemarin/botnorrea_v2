@@ -15,12 +15,17 @@ import {
   deleteCommand,
   updateCommand,
 } from "../../services/dynamodb";
+import { buildExpressions } from "../../utils/dynamoDbHelper";
+import { randomUUID } from "crypto";
 
 const { DYNAMODB_TABLE_USERS } = process.env;
 const tableUsers = `${DYNAMODB_TABLE_USERS}`;
 
-const get = async ({ id }: { id: string }, isDirect: boolean = true) => {
-  const { Item } = await getCommand({ TableName: tableUsers, Key: { id } });
+const get = async (
+  { uuid }: { uuid: string | number },
+  isDirect: boolean = true
+) => {
+  const { Item } = await getCommand({ TableName: tableUsers, Key: { uuid } });
 
   if (!Item) {
     return { statusCode: NOT_FOUND };
@@ -38,6 +43,7 @@ const post = async (
 ) => {
   const timestamp = new Date().getTime();
   const user: User = {
+    uuid: randomUUID(),
     id: params?.id,
     role: editAsAdmin ? params?.role : Role.USER,
     username: params?.username,
@@ -45,7 +51,7 @@ const post = async (
     updatedAt: timestamp,
   };
   await putCommand({ TableName: tableUsers, Item: user });
-  const { body } = await get({ id: user?.id }, false);
+  const { body } = await get({ uuid: `${user?.uuid}` }, false);
   return {
     statusCode: CREATED,
     body: JSON.stringify(body),
@@ -57,7 +63,7 @@ const update = async (
   editAsAdmin: boolean = false,
   isPatch: boolean = false
 ) => {
-  const { body: currentUser } = await get({ id: params?.id }, false);
+  const { body: currentUser } = await get({ uuid: params?.uuid }, false);
   if (!currentUser || typeof currentUser === "string") {
     return { statusCode: NOT_FOUND };
   }
@@ -65,36 +71,34 @@ const update = async (
   const currentRole = currentUser.role ?? Role.USER;
   const timestamp = new Date().getTime();
   const user: User = {
-    id: "",
+    id: currentUser?.id,
     username: params?.username,
-    role: editAsAdmin ? params?.role : currentRole,
-    apiKey: editAsAdmin ? params?.apiKey : "",
+    role: currentRole,
     updatedAt: timestamp,
   };
 
-  const ExpressionAttributeValues: Object = {};
-  const UpdateExpression: Array<string> = [];
-  const ExpressionAttributeNames: Object = {};
-  for (const [key, value] of Object.entries(user)) {
-    if (Boolean(value)) {
-      const attrValue: string = `:${key}`;
-      const attrName: string = `#${key}`;
-      ExpressionAttributeValues[attrValue] = value;
-      UpdateExpression.push(` ${attrName} = ${attrValue}`);
-      ExpressionAttributeNames[`${attrName}`] = `${key}`;
-    }
+  if (editAsAdmin) {
+    user.id = params?.id;
+    user.role = params?.role;
+    user.apiKey = params?.apiKey;
   }
+
+  const {
+    ExpressionAttributeNames,
+    ExpressionAttributeValues,
+    UpdateExpression,
+  } = buildExpressions(user);
 
   const response = await updateCommand({
     TableName: tableUsers,
-    Key: { id: params?.id },
+    Key: { uuid: currentUser?.uuid },
     ExpressionAttributeValues,
-    UpdateExpression: `SET ${UpdateExpression.join(",").trim()}`,
+    UpdateExpression,
     ExpressionAttributeNames,
   });
 
   if (isPatch) {
-    return await get({ id: params?.id });
+    return await get({ uuid: currentUser?.uuid });
   }
 
   return {
@@ -103,8 +107,8 @@ const update = async (
   };
 };
 
-const remove = async ({ id }: { id: string }) => {
-  await deleteCommand({ TableName: tableUsers, Key: { id } });
+const remove = async ({ uuid }: { uuid: string }) => {
+  await deleteCommand({ TableName: tableUsers, Key: { uuid } });
   return { statusCode: NO_CONTENT };
 };
 
@@ -135,13 +139,14 @@ export const dynamoDBUsersCrud = async (
     const user: User = JSON.parse(contextCustom["Botnorrea-v2"] ?? "{}");
     const body =
       pathParameters && pathParameters?.id
-        ? { id: pathParameters?.id }
+        ? { uuid: pathParameters?.id }
         : JSON.parse(bodyString ?? "{}");
     const canEditAsAdmin =
       user?.role && [Role.ROOT, Role.ADMIN].includes(user?.role);
     const response = await methods[httpMethod](body, canEditAsAdmin);
     return callback(null, { statusCode: OK, ...response });
   } catch (error) {
+    console.error(`dynamo_users_crud.dynamoDBUsersCrud: ${error?.message}`, error);
     return callback(null, {
       statusCode: INTERNAL_SERVER_ERROR,
       body: JSON.stringify({ error: error.message }),

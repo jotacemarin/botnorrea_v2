@@ -9,7 +9,9 @@
     "region": "",
     "environment": {
       "BOT_NAME": "botnorrea-v2",
-      "TELEGRAM_BOT_TOKEN": ""
+      "TELEGRAM_BOT_TOKEN": "",
+      "DYNAMODB_TABLE_USERS": "Users",
+      "DYNAMODB_TABLE_GROUPS": "Groups"
     }
   }
 }
