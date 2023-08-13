@@ -2,9 +2,9 @@
   "headers": {
     "Authorization": "xxxxx"
   },
-  "httpMethod": "GET",
-  "pathParameters": { "id": "e824aa12-c300-41e9-bf56-4d664ce60cf2" },
-  "body": "{\"id\":\"test\",\"apiKey\":\"test\",\"role\":\"ADMIN\",\"username\":\"pombo-test\"}",
+  "httpMethod": "DELETE",
+  "pathParameters": { "id": "e181819c-d604-45f7-9b46-c80476ba6274" },
+  "body": "{\"role\":\"USER\",\"uuid\":\"e181819c-d604-45f7-9b46-c80476ba6274\",\"username\":\"Test-username\",\"id\":\"test-id\"}",
   "requestContext": {
     "authorizer": {
       "Botnorrea-v2": "{\"id\": \"botnorrea-v2-dev-admin\",\"apiKey\": \"0cc6598b-f0ad-48a9-a7c0-90830967ef30\",\"createdAt\": 1691789988128,\"role\": \"ROOT\",\"updatedAt\": 1691789988128,\"username\": \"botnorrea-v2-dev-admin\"}"

@@ -32,10 +32,10 @@ export const execute = async (token: string, methodArn: string) => {
   const [id, apiKey] = atob(token).split(":");
   const data = await getCommand({
     TableName: `${DYNAMODB_TABLE_USERS}`,
-    Key: { id },
+    Key: { uuid: id },
   });
-  const user = data?.Item as User;
 
+  const user = data?.Item as User;
   if (user?.apiKey !== apiKey) {
     return buildPolicy(methodArn);
   }
@@ -51,7 +51,7 @@ export const authorizer = async (
     const [_, basicToken] = event?.authorizationToken?.split(" ");
     return await execute(basicToken, event?.methodArn);
   } catch (error) {
-    console.error("authorizer", error?.message);
+    console.error(`authorizer: ${error?.message}`, error);
     return buildPolicy(event?.methodArn);
   } finally {
     const end = new Date().getTime();

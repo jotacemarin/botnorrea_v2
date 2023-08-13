@@ -17,7 +17,7 @@ const client = new DynamoDBClient({ region: REGION });
 const docClient = DynamoDBDocumentClient.from(client);
 
 export interface DynamoDBKey {
-  [Key: string]: string;
+  [Key: string]: string | number;
 }
 
 export interface DynamoDBCommand {
@@ -30,6 +30,7 @@ export interface DynamoDBCommand {
   ExpressionAttributeNames?: DynamoDBKey | JSON | Object | any;
   ExpressionAttributeValues?: DynamoDBKey | JSON | Object | any;
   KeyConditionExpression?: string;
+  FilterExpression?: string;
   ConsistentRead?: boolean;
 }
 

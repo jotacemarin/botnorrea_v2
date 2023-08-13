@@ -1,0 +1,10 @@
+{
+  "headers": {
+    "Authorization": "xxxxx"
+  },
+  "queryStringParameters": {
+    "id": "botnorrea-v2-dev-admin",
+    "apiKey": "0cc6598b-f0ad-48a9-a7c0-90830967ef30"
+  },
+  "body": "{\"update_id\":262661418,\"message\":{\"message_id\":29,\"from\":{\"id\":1557564823,\"is_bot\":false,\"first_name\":\"Alejandra\",\"last_name\":\"Figueroa\"},\"chat\":{\"id\":-989987188,\"title\":\"botnorrea test group 0\",\"type\":\"group\",\"all_members_are_administrators\":true},\"date\":1691902959,\"text\":\"Holi 1\"}}"
+}

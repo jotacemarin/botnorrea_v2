@@ -19,6 +19,8 @@ provider:
     BOT_NAME: ${self:custom.secrets.provider.environment.BOT_NAME}-${self:provider.stage}
     TELEGRAM_BOT_TOKEN: ${self:custom.secrets.provider.environment.TELEGRAM_BOT_TOKEN}
     DYNAMODB_TABLE_USERS: ${self:provider.environment.BOT_NAME}-${self:custom.secrets.provider.environment.DYNAMODB_TABLE_USERS}
+    DYNAMODB_TABLE_GROUPS: ${self:provider.environment.BOT_NAME}-${self:custom.secrets.provider.environment.DYNAMODB_TABLE_GROUPS}
+    PIPEDREAM_TEST: ""
   iam:
     role:
       statements:
@@ -34,10 +36,12 @@ provider:
 
 resources:
   - ${file(./src/resources/dynamodb-users-table.yml)}
+  - ${file(./src/resources/dynamodb-groups-table.yml)}
 
 functions:
   authorizer: ${file(./src/functions/authorizer/function.yml)}
   dummy: ${file(./src/functions/dummy/function.yml)}
   handler: ${file(./src/functions/handler/function.yml)}
   telegramSetWebhook: ${file(./src/functions/telegram_set_webhook/function.yml)}
+  telegramWebhook: ${file(./src/functions/telegram_webhook/function.yml)}
   dynamoDBUsersCrud: ${file(./src/functions/dynamo_users_crud/function.yml)}

@@ -1,8 +1,9 @@
 import { Role } from "./Roles";
 
 export interface User {
-  id: string;
-  username: string;
+  uuid?: string | number;
+  id?: string | number;
+  username?: string;
   apiKey?: string | undefined | null;
   role?: Role;
   createdAt?: number;
