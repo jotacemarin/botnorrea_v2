@@ -13,6 +13,7 @@ const updateSpy = jest.spyOn(dynamobdServices, "updateCommand");
 const deleteSpy = jest.spyOn(dynamobdServices, "deleteCommand");
 
 const getTestUser = {
+  uuid: "1234567890",
   id: "1234567890",
   username: "test_user",
   role: Role.USER,
@@ -21,12 +22,14 @@ const getTestUser = {
 };
 
 const postTestUser = {
+  uuid: "1234567891",
   id: "1234567891",
   username: "new_user",
   role: Role.USER,
 };
 
 const updateTestUser = {
+  uuid: "1234567890",
   id: "1234567890",
   username: "updated_user",
   role: Role.ADMIN,

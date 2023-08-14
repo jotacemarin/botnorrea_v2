@@ -5,5 +5,5 @@ export interface Group {
   users?: Array<string>;
   listeners?: Array<any>;
   createdAt?: number;
-  updatedAt: number;
+  updatedAt?: number;
 }

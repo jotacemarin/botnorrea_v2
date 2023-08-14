@@ -9,106 +9,38 @@ import {
   OK,
 } from "http-status";
 import { Role, User } from "../../models";
-import {
-  getCommand,
-  putCommand,
-  deleteCommand,
-  updateCommand,
-} from "../../services/dynamodb";
-import { buildExpressions } from "../../utils/dynamoDbHelper";
-import { randomUUID } from "crypto";
+import usersDynamoService from "../../services/dynamoUsersService";
 
-const { DYNAMODB_TABLE_USERS } = process.env;
-const tableUsers = `${DYNAMODB_TABLE_USERS}`;
-
-const get = async (
-  { uuid }: { uuid: string | number },
-  isDirect: boolean = true
-) => {
-  const { Item } = await getCommand({ TableName: tableUsers, Key: { uuid } });
-
+const get = async ({ uuid }: { uuid: string | number }) => {
+  const Item = await usersDynamoService.get(uuid);
   if (!Item) {
     return { statusCode: NOT_FOUND };
   }
 
-  return {
-    statusCode: OK,
-    body: isDirect ? JSON.stringify(Item) : Item,
-  };
+  return { statusCode: OK, body: JSON.stringify(Item) };
 };
 
 const post = async (
   params: JSON | Object | any,
   editAsAdmin: boolean = false
 ) => {
-  const timestamp = new Date().getTime();
-  const user: User = {
-    uuid: randomUUID(),
-    id: params?.id,
-    role: editAsAdmin ? params?.role : Role.USER,
-    username: params?.username,
-    createdAt: timestamp,
-    updatedAt: timestamp,
-  };
-  await putCommand({ TableName: tableUsers, Item: user });
-  const { body } = await get({ uuid: `${user?.uuid}` }, false);
-  return {
-    statusCode: CREATED,
-    body: JSON.stringify(body),
-  };
+  const Item = await usersDynamoService.create(params, editAsAdmin);
+  return { statusCode: CREATED, body: JSON.stringify(Item) };
 };
 
 const update = async (
   params: JSON | Object | any,
-  editAsAdmin: boolean = false,
-  isPatch: boolean = false
+  editAsAdmin: boolean = false
 ) => {
-  const { body: currentUser } = await get({ uuid: params?.uuid }, false);
-  if (!currentUser || typeof currentUser === "string") {
-    return { statusCode: NOT_FOUND };
-  }
-
-  const currentRole = currentUser.role ?? Role.USER;
-  const timestamp = new Date().getTime();
-  const user: User = {
-    id: currentUser?.id,
-    username: params?.username,
-    role: currentRole,
-    updatedAt: timestamp,
-  };
-
-  if (editAsAdmin) {
-    user.id = params?.id;
-    user.role = params?.role;
-    user.apiKey = params?.apiKey;
-  }
-
-  const {
-    ExpressionAttributeNames,
-    ExpressionAttributeValues,
-    UpdateExpression,
-  } = buildExpressions(user);
-
-  const response = await updateCommand({
-    TableName: tableUsers,
-    Key: { uuid: currentUser?.uuid },
-    ExpressionAttributeValues,
-    UpdateExpression,
-    ExpressionAttributeNames,
-  });
-
-  if (isPatch) {
-    return await get({ uuid: currentUser?.uuid });
-  }
-
+  const Item = await usersDynamoService.update(params, editAsAdmin);
   return {
     statusCode: OK,
-    body: JSON.stringify(response?.Attributes),
+    body: JSON.stringify(Item),
   };
 };
 
 const remove = async ({ uuid }: { uuid: string }) => {
-  await deleteCommand({ TableName: tableUsers, Key: { uuid } });
+  await usersDynamoService.remove(uuid);
   return { statusCode: NO_CONTENT };
 };
 
@@ -117,8 +49,7 @@ export const methods = {
   POST: post,
   DELETE: remove,
   PUT: update,
-  PATCH: (body: any, editAsAdmin: boolean = false) =>
-    update(body, editAsAdmin, true),
+  PATCH: update,
 };
 
 export const dynamoDBUsersCrud = async (
@@ -131,24 +62,29 @@ export const dynamoDBUsersCrud = async (
     if (!Object.keys(methods).includes(httpMethod)) {
       return callback(null, { statusCode: METHOD_NOT_ALLOWED });
     }
+
     if (!bodyString?.trim() && !pathParameters?.id) {
       return callback(null, { statusCode: BAD_GATEWAY });
     }
 
     const contextCustom = event?.requestContext?.authorizer ?? {};
     const user: User = JSON.parse(contextCustom["Botnorrea-v2"] ?? "{}");
+    const canEditAsAdmin =
+      user?.role && [Role.ROOT, Role.ADMIN].includes(user?.role);
+
     const body =
       pathParameters && pathParameters?.id
         ? { uuid: pathParameters?.id }
         : JSON.parse(bodyString ?? "{}");
-    const canEditAsAdmin =
-      user?.role && [Role.ROOT, Role.ADMIN].includes(user?.role);
     const response = await methods[httpMethod](body, canEditAsAdmin);
     return callback(null, { statusCode: OK, ...response });
   } catch (error) {
-    console.error(`dynamo_users_crud.dynamoDBUsersCrud: ${error?.message}`, error);
+    console.error(
+      `dynamo_users_crud.dynamoDBUsersCrud: ${error?.message}`,
+      error
+    );
     return callback(null, {
-      statusCode: INTERNAL_SERVER_ERROR,
+      statusCode: error?.statusCode ?? INTERNAL_SERVER_ERROR,
       body: JSON.stringify({ error: error.message }),
     });
   }

@@ -20,7 +20,7 @@ provider:
     TELEGRAM_BOT_TOKEN: ${self:custom.secrets.provider.environment.TELEGRAM_BOT_TOKEN}
     DYNAMODB_TABLE_USERS: ${self:provider.environment.BOT_NAME}-${self:custom.secrets.provider.environment.DYNAMODB_TABLE_USERS}
     DYNAMODB_TABLE_GROUPS: ${self:provider.environment.BOT_NAME}-${self:custom.secrets.provider.environment.DYNAMODB_TABLE_GROUPS}
-    PIPEDREAM_TEST: ""
+    PIPEDREAM_TEST: "https://2d909dddcd2bc22435161910d5867491.m.pipedream.net"
   iam:
     role:
       statements:

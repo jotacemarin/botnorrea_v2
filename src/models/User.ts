@@ -7,5 +7,5 @@ export interface User {
   apiKey?: string | undefined | null;
   role?: Role;
   createdAt?: number;
-  updatedAt: number;
+  updatedAt?: number;
 }
