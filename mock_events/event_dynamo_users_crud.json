@@ -4,6 +4,10 @@
   },
   "httpMethod": "DELETE",
   "pathParameters": { "id": "e181819c-d604-45f7-9b46-c80476ba6274" },
+  "queryStringParameters": {
+    "id": "botnorrea-v2-dev-admin",
+    "apiKey": "0cc6598b-f0ad-48a9-a7c0-90830967ef30"
+  },
   "body": "{\"role\":\"USER\",\"uuid\":\"e181819c-d604-45f7-9b46-c80476ba6274\",\"username\":\"Test-username\",\"id\":\"test-id\"}",
   "requestContext": {
     "authorizer": {

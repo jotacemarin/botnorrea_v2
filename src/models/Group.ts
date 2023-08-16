@@ -3,7 +3,6 @@ export interface Group {
   id?: string | number;
   title?: string;
   users?: Array<string>;
-  listeners?: Array<any>;
   createdAt?: number;
-  updatedAt: number;
+  updatedAt?: number;
 }
