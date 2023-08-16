@@ -40,8 +40,6 @@ resources:
 
 functions:
   authorizer: ${file(./src/functions/authorizer/function.yml)}
-  dummy: ${file(./src/functions/dummy/function.yml)}
-  handler: ${file(./src/functions/handler/function.yml)}
   telegramSetWebhook: ${file(./src/functions/telegram_set_webhook/function.yml)}
   telegramWebhook: ${file(./src/functions/telegram_webhook/function.yml)}
   dynamoDBUsersCrud: ${file(./src/functions/dynamo_users_crud/function.yml)}
