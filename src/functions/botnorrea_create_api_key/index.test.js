@@ -1,4 +1,5 @@
 import { OK, FORBIDDEN, NOT_FOUND } from "http-status";
+import { FormattingOptionsTg } from "../../models";
 import usersDynamoService from "../../services/dynamoUsersService";
 import { sendMessage } from "../../services/telegram";
 import { execute } from "./index";
@@ -38,6 +39,8 @@ describe("execute", () => {
     );
     expect(sendMessage).toHaveBeenCalledWith({
       chat_id: "mockChatId",
+      protect_content: true,
+      parse_mode: FormattingOptionsTg.HTML,
       text: expect.any(String),
       reply_to_message_id: "mockMessageId",
     });

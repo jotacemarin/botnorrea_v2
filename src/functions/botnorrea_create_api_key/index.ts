@@ -8,7 +8,13 @@ import {
   UNAUTHORIZED,
 } from "http-status";
 import { randomUUID } from "crypto";
-import { User, Role, UpdateTg, ChatTypeTg } from "../../models";
+import {
+  User,
+  Role,
+  UpdateTg,
+  ChatTypeTg,
+  FormattingOptionsTg,
+} from "../../models";
 import usersDynamoService from "../../services/dynamoUsersService";
 import { sendMessage } from "../../services/telegram";
 
@@ -49,8 +55,10 @@ export const execute = async (
     await usersDynamoService.update({ ...currentUser, apiKey }, true);
     await sendMessage({
       chat_id: body?.message?.chat?.id,
-      text: `${apiKey}`,
+      text: `<code>${apiKey}</code>`,
       reply_to_message_id: body?.message?.message_id,
+      protect_content: true,
+      parse_mode: FormattingOptionsTg.HTML,
     });
   } catch (error) {
     console.error(`botnorrea_create_api_key.execute: ${error?.message}`, error);
