@@ -3,7 +3,7 @@
     "Authorization": "xxxxx"
   },
   "httpMethod": "POST",
-  "body": "{\"command\":\"create_api_key\",\"endpoint\":\"https://2d909dddcd2bc22435161910d5867491.m.pipedream.net\"}",
+  "body": "{\"command\":\"/create_api_key\",\"endpoint\":\"https://2d909dddcd2bc22435161910d5867491.m.pipedream.net\"}",
   "requestContext": {
     "authorizer": {
       "Botnorrea-v2": "{\"id\": \"botnorrea-v2-dev-admin\",\"apiKey\": \"0cc6598b-f0ad-48a9-a7c0-90830967ef30\",\"createdAt\": 1691789988128,\"role\": \"ROOT\",\"updatedAt\": 1691789988128,\"username\": \"botnorrea-v2-dev-admin\"}"

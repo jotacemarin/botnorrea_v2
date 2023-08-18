@@ -2,7 +2,7 @@
   "headers": {
     "Authorization": "xxxxx"
   },
-  "httpMethod": "DELETE",
+  "httpMethod": "POST",
   "pathParameters": { "id": "e181819c-d604-45f7-9b46-c80476ba6274" },
   "queryStringParameters": {
     "id": "botnorrea-v2-dev-admin",

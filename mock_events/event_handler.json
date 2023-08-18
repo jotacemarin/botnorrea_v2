@@ -1,6 +1,0 @@
-{
-  "headers": {
-    "Authorization": "xxxxx"
-  },
-  "body": "{\"message\":\"Test public webhook with Authorization header\"}"
-}
