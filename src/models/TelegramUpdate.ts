@@ -1,4 +1,5 @@
 import { TelegramChat } from "./TelegramChat";
+import { TelegramEntity } from "./TelegramEntity";
 import { TelegramUser } from "./TelegramUser";
 
 export interface TelegramUpdate {
@@ -9,5 +10,6 @@ export interface TelegramUpdate {
     chat: TelegramChat;
     date: number;
     text: string;
+    entities?: Array<TelegramEntity>;
   };
 }

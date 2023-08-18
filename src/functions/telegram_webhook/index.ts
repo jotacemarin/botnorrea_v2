@@ -13,11 +13,12 @@ import {
   TelegramUser,
   TelegramChat,
   Group,
+  TelegramEntityType,
 } from "../../models";
 import usersDynamoService from "../../services/dynamoUsersService";
 import groupsDynamoServices from "../../services/dynamoGroupsServices";
-
-const { PIPEDREAM_TEST } = process.env;
+import dynamoDynamoServices from "../../services/dynamoCommandsService";
+import { getCommandKey, hasCommand } from "../../utils/telegram";
 
 const putUser = async (from: TelegramUser) => {
   try {
@@ -47,6 +48,24 @@ const putGroup = async (chat: TelegramChat) => {
   }
 };
 
+const sendToEndpointCommand = async (body: TelegramUpdate) => {
+  try {
+    const { offset, length } = getCommandKey(body);
+    const command = body?.message?.text?.substring(offset, length);
+    const { endpoint } = await dynamoDynamoServices.get(command);
+    if (!endpoint) {
+      return;
+    }
+
+    await axios.post(endpoint, body);
+  } catch (error) {
+    console.error(
+      `telegram_webhook.sendToEndpointCommand: ${error?.message}`,
+      error
+    );
+  }
+};
+
 export const execute = async (
   body: TelegramUpdate
 ): Promise<{ statusCode: number; body?: string }> => {
@@ -54,8 +73,16 @@ export const execute = async (
     putUser(body?.message?.from),
     putGroup(body?.message?.chat),
   ]);
-  await axios.post(`${PIPEDREAM_TEST}`, body);
-  return { statusCode: OK, body: JSON.stringify(body) };
+
+  if (body?.message?.from?.is_bot) {
+    return { statusCode: OK };
+  }
+
+  if (hasCommand(body)) {
+    await sendToEndpointCommand(body);
+  }
+
+  return { statusCode: OK };
 };
 
 export const telegramWebhook = async (

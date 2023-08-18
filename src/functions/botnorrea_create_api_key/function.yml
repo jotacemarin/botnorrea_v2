@@ -1,0 +1,15 @@
+name: ${self:custom.secrets.service.name}-${self:custom.secrets.provider.stage}-botnorrea-create-api-key
+handler: index.botnorreaCreateApiKey
+memorySize: 128
+timeout: 30
+reservedConcurrency: 20
+events: 
+  - http: 
+      path: /${self:custom.secrets.service.name}-${self:custom.secrets.provider.stage}/botnorrea/create-api-key
+      method: POST
+      request:
+        parameters:
+          querystrings:
+            id: true
+            apiKey: true
+      cors: true

@@ -20,6 +20,7 @@ provider:
     TELEGRAM_BOT_TOKEN: ${self:custom.secrets.provider.environment.TELEGRAM_BOT_TOKEN}
     DYNAMODB_TABLE_USERS: ${self:provider.environment.BOT_NAME}-${self:custom.secrets.provider.environment.DYNAMODB_TABLE_USERS}
     DYNAMODB_TABLE_GROUPS: ${self:provider.environment.BOT_NAME}-${self:custom.secrets.provider.environment.DYNAMODB_TABLE_GROUPS}
+    DYNAMODB_TABLE_COMMANDS: ${self:provider.environment.BOT_NAME}-${self:custom.secrets.provider.environment.DYNAMODB_TABLE_COMMANDS}
     PIPEDREAM_TEST: "https://2d909dddcd2bc22435161910d5867491.m.pipedream.net"
   iam:
     role:
@@ -37,9 +38,12 @@ provider:
 resources:
   - ${file(./src/resources/dynamodb-users-table.yml)}
   - ${file(./src/resources/dynamodb-groups-table.yml)}
+  - ${file(./src/resources/dynamodb-commands-table.yml)}
 
 functions:
   authorizer: ${file(./src/functions/authorizer/function.yml)}
   telegramSetWebhook: ${file(./src/functions/telegram_set_webhook/function.yml)}
   telegramWebhook: ${file(./src/functions/telegram_webhook/function.yml)}
   dynamoDBUsersCrud: ${file(./src/functions/dynamo_users_crud/function.yml)}
+  dynamoDBCommandsCrud: ${file(./src/functions/dynamo_commands_crud/function.yml)}
+  botnorreaCreateApiKey: ${file(./src/functions/botnorrea_create_api_key/function.yml)}
