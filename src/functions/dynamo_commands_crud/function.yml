@@ -1,0 +1,34 @@
+name: ${self:custom.secrets.service.name}-${self:custom.secrets.provider.stage}-commands
+handler: index.dynamoDBCommandsCrud
+memorySize: 128
+timeout: 30
+reservedConcurrency: 20
+events: 
+  - http: 
+      path: /${self:custom.secrets.service.name}-${self:custom.secrets.provider.stage}/commands/{id}
+      method: GET
+      request:
+        parameters:
+          paths:
+            id: true
+      cors: true
+      authorizer: authorizer
+  - http: 
+      path: /${self:custom.secrets.service.name}-${self:custom.secrets.provider.stage}/commands
+      method: POST
+      cors: true
+      authorizer: authorizer
+  - http: 
+      path: /${self:custom.secrets.service.name}-${self:custom.secrets.provider.stage}/commands
+      method: PUT
+      cors: true
+      authorizer: authorizer
+  - http: 
+      path: /${self:custom.secrets.service.name}-${self:custom.secrets.provider.stage}/commands/{id}
+      method: DELETE
+      request:
+        parameters:
+          paths:
+            id: true
+      cors: true
+      authorizer: authorizer

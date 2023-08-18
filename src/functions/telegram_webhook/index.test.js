@@ -32,7 +32,7 @@ describe("should execute putUser and putGroup functions and make axios post requ
     expect(usersUpdateSpy).toHaveBeenCalled();
     expect(groupsGetByIdSpy).toHaveBeenCalled();
     expect(groupsUpdateSpy).toHaveBeenCalled();
-    expect(result).toEqual({ statusCode: 200, body: JSON.stringify(mockBody) });
+    expect(result).toEqual({ statusCode: 200 });
   });
 
   it("group and user does not exits", async () => {
@@ -47,6 +47,6 @@ describe("should execute putUser and putGroup functions and make axios post requ
     expect(usersCreateSpy).toHaveBeenCalled();
     expect(groupsGetByIdSpy).toHaveBeenCalled();
     expect(groupsCreateSpy).toHaveBeenCalled();
-    expect(result).toEqual({ statusCode: 200, body: JSON.stringify(mockBody) });
+    expect(result).toEqual({ statusCode: 200 });
   });
 });

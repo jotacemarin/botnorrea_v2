@@ -1,4 +1,5 @@
 import axios, { AxiosResponse } from "axios";
+import { TelegramEntity, TelegramUser } from "../models";
 
 const { TELEGRAM_BOT_TOKEN } = process.env;
 
@@ -28,3 +29,22 @@ export const getWebhookInfo = async (): Promise<
     };
   }>
 > => await telegramService.get("/getWebhookInfo");
+
+export const sendMessage = async (params: {
+  chat_id: number | string;
+  message_thread_id?: number;
+  text: string;
+  parse_mode?: string;
+  entities?: Array<TelegramEntity>;
+  reply_to_message_id?: number;
+  reply_markup?: any;
+}): Promise<
+  AxiosResponse<{
+    message_id: number;
+    message_thread_id: number;
+    from: TelegramUser;
+    sender_chat: any;
+    date: number;
+    entities: Array<TelegramEntity>;
+  }>
+> => await telegramService.post("/sendMessage", params);

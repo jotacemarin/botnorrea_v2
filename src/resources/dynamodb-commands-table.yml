@@ -1,0 +1,14 @@
+Resources:
+  CommandsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: command
+          AttributeType: S
+      KeySchema:
+        - AttributeName: command
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+      TableName: ${self:provider.environment.DYNAMODB_TABLE_COMMANDS}
