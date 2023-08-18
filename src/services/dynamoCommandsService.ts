@@ -98,7 +98,7 @@ const create = async (params: Command): Promise<Command> => {
   };
 
   await putCommand({ TableName: tableCommands, Item: command });
-  return await get(uuid);
+  return await get(`${command?.command}`);
 };
 
 const update = async (params: Command, user: User): Promise<Command> => {
@@ -144,8 +144,8 @@ const update = async (params: Command, user: User): Promise<Command> => {
   return await get(Item?.command);
 };
 
-const remove = async (uuid: string) => {
-  await deleteCommand({ TableName: tableCommands, Key: { uuid } });
+const remove = async (command: string) => {
+  await deleteCommand({ TableName: tableCommands, Key: { command } });
 };
 
 export default { get, getByUuid, getByApiKey, create, update, remove };
