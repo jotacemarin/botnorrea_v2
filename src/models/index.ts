@@ -6,4 +6,5 @@ export {
   EntityTypeTg,
   UpdateTg,
   UserTg,
+  FormattingOptionsTg,
 } from "./Telegram";

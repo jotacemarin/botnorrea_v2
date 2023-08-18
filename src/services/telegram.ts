@@ -1,5 +1,5 @@
 import axios, { AxiosResponse } from "axios";
-import { EntityTg, UserTg } from "../models";
+import { EntityTg, FormattingOptionsTg, UserTg } from "../models";
 
 const { TELEGRAM_BOT_TOKEN } = process.env;
 
@@ -34,8 +34,9 @@ export const sendMessage = async (params: {
   chat_id: number | string;
   message_thread_id?: number;
   text: string;
-  parse_mode?: string;
+  parse_mode?: FormattingOptionsTg;
   entities?: Array<EntityTg>;
+  protect_content?: boolean;
   reply_to_message_id?: number;
   reply_markup?: any;
 }): Promise<

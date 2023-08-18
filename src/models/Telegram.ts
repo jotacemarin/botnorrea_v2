@@ -7,6 +7,12 @@ export enum EntityTypeTg {
   BOT_COMMAND = "bot_command",
 }
 
+export enum FormattingOptionsTg {
+  MARKDOWN_V2 = "MarkdownV2",
+  HTML = "HTML",
+  MARKDOWN = "Markdown",
+}
+
 export interface ChatTg {
   id: number | string;
   title: string;
