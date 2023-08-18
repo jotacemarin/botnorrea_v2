@@ -18,6 +18,8 @@ import {
 import usersDynamoService from "../../services/dynamoUsersService";
 import { sendMessage } from "../../services/telegram";
 
+const { BOT_NAME, BOT_DOMAIN } = process.env;
+
 export const execute = async (
   body: UpdateTg
 ): Promise<{ statusCode: number; body?: string }> => {
@@ -55,7 +57,12 @@ export const execute = async (
     await usersDynamoService.update({ ...currentUser, apiKey }, true);
     await sendMessage({
       chat_id: body?.message?.chat?.id,
-      text: `<code>${apiKey}</code>`,
+      text: `Done! You can now add a new commands to ${String(BOT_NAME).replace(/-prod/ig, "")}.
+
+username: <code>${currentUser?.uuid}</code>
+password: <code>${apiKey}</code>
+
+Use these username and password as Basic Auth to ${BOT_DOMAIN}/telegram/send-message`, // To do: 🐸🐶☠️ change bot domain
       reply_to_message_id: body?.message?.message_id,
       protect_content: true,
       parse_mode: FormattingOptionsTg.HTML,
@@ -76,11 +83,11 @@ export const botnorreaCreateApiKey = async (
   try {
     const { id, apiKey } = event?.queryStringParameters ?? {};
 
-    const user = await usersDynamoService.get(`${id}`);
+    const botUser = await usersDynamoService.get(`${id}`);
     if (
-      !user?.role ||
-      user?.apiKey !== apiKey ||
-      ![Role.ROOT, Role.ADMIN].includes(user?.role)
+      !botUser?.role ||
+      botUser?.apiKey !== apiKey ||
+      ![Role.ROOT, Role.ADMIN].includes(botUser?.role)
     ) {
       throw new Error("Unauthorized");
     }
