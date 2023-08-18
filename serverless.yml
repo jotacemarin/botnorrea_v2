@@ -47,3 +47,4 @@ functions:
   dynamoDBUsersCrud: ${file(./src/functions/dynamo_users_crud/function.yml)}
   dynamoDBCommandsCrud: ${file(./src/functions/dynamo_commands_crud/function.yml)}
   botnorreaCreateApiKey: ${file(./src/functions/botnorrea_create_api_key/function.yml)}
+  botnorreaCommandsCreate: ${file(./src/functions/botnorrea_comands_create/function.yml)}

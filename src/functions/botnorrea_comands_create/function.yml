@@ -1,0 +1,15 @@
+name: ${self:custom.secrets.service.name}-${self:custom.secrets.provider.stage}-botnorrea-commands-create
+handler: index.botnorreaCommandsCreate
+memorySize: 128
+timeout: 30
+reservedConcurrency: 20
+events: 
+  - http: 
+      path: /${self:custom.secrets.service.name}-${self:custom.secrets.provider.stage}/botnorrea/comands-create
+      method: POST
+      request:
+        parameters:
+          querystrings:
+            id: true
+            apiKey: true
+      cors: true

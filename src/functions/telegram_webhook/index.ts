@@ -9,7 +9,7 @@ import axios from "axios";
 import { Role, User, Group, UserTg, ChatTg, UpdateTg } from "../../models";
 import usersDynamoService from "../../services/dynamoUsersService";
 import groupsDynamoServices from "../../services/dynamoGroupsServices";
-import dynamoDynamoServices from "../../services/dynamoCommandsService";
+import commandsDynamoServices from "../../services/dynamoCommandsService";
 import { getCommandKey, hasCommand } from "../../utils/telegram";
 
 const putUser = async (from: UserTg) => {
@@ -44,7 +44,7 @@ const sendToEndpointCommand = async (body: UpdateTg) => {
   try {
     const { offset, length } = getCommandKey(body);
     const command = body?.message?.text?.substring(offset, length);
-    const { endpoint } = await dynamoDynamoServices.get(command);
+    const { endpoint } = await commandsDynamoServices.get(command);
     if (!endpoint) {
       return;
     }
@@ -103,6 +103,7 @@ export const telegramWebhook = async (
 
   try {
     const body = JSON.parse(event?.body);
+    console.log("telegram_webhook body:\n", JSON.stringify(body, null, 2));
     const response = await execute(body);
     return callback(null, response);
   } catch (error) {

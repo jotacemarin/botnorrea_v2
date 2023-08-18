@@ -9,6 +9,7 @@ export interface Command {
   uuid?: string;
   command?: string;
   endpoint?: string;
+  description?: string;
   isEnabled?: boolean;
   apiKey?: string;
   createdAt?: number;
