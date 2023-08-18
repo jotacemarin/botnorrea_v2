@@ -8,12 +8,12 @@ import {
   UNAUTHORIZED,
 } from "http-status";
 import { randomUUID } from "crypto";
-import { User, TelegramUpdate, TelegramChatType, Role } from "../../models";
+import { User, Role, UpdateTg, ChatTypeTg } from "../../models";
 import usersDynamoService from "../../services/dynamoUsersService";
 import { sendMessage } from "../../services/telegram";
 
 export const execute = async (
-  body: TelegramUpdate
+  body: UpdateTg
 ): Promise<{ statusCode: number; body?: string }> => {
   const { Items } = await usersDynamoService.getById(body?.message?.from?.id);
   if (!Items?.length) {
@@ -26,7 +26,7 @@ export const execute = async (
     return { statusCode: NOT_FOUND };
   }
 
-  if (body?.message?.chat?.type !== TelegramChatType.PRIVATE) {
+  if (body?.message?.chat?.type !== ChatTypeTg.PRIVATE) {
     await sendMessage({
       chat_id: body?.message?.chat?.id,
       text: "Please request your new API KEY in a private message!",

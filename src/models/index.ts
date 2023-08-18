@@ -1,10 +1,9 @@
-export { Role } from "./Roles";
-export { User } from "./User";
-export { Group } from "./Group";
-export { Command } from "./Command";
-export { TelegramChat } from "./TelegramChat";
-export { TelegramChatType } from "./TelegramChatType";
-export { TelegramUser } from "./TelegramUser";
-export { TelegramUpdate } from "./TelegramUpdate";
-export { TelegramEntity } from "./TelegramEntity";
-export { TelegramEntityType } from "./TelegramEntityType";
+export { Role, Command, Group, User } from "./Botnorrea";
+export {
+  ChatTg,
+  ChatTypeTg,
+  EntityTg,
+  EntityTypeTg,
+  UpdateTg,
+  UserTg,
+} from "./Telegram";

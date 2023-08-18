@@ -7,7 +7,7 @@ import {
 } from "http-status";
 import { getCommand, putCommand, scanCommand, updateCommand } from "./dynamodb";
 
-import { Group, TelegramChat } from "../models";
+import { ChatTg, Group } from "../models";
 import { buildExpressions } from "../utils/dynamoDbHelper";
 
 const { DYNAMODB_TABLE_GROUPS } = process.env;
@@ -28,7 +28,7 @@ const get = async (uuid: string | number): Promise<Group> => {
   return Item as Group;
 };
 
-const create = async (params: TelegramChat) => {
+const create = async (params: ChatTg) => {
   const timestamp = new Date().getTime();
   const uuid = randomUUID();
   const group: Group = {

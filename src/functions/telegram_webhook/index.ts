@@ -6,21 +6,13 @@ import {
   UNAUTHORIZED,
 } from "http-status";
 import axios from "axios";
-import {
-  Role,
-  User,
-  TelegramUpdate,
-  TelegramUser,
-  TelegramChat,
-  Group,
-  TelegramEntityType,
-} from "../../models";
+import { Role, User, Group, UserTg, ChatTg, UpdateTg } from "../../models";
 import usersDynamoService from "../../services/dynamoUsersService";
 import groupsDynamoServices from "../../services/dynamoGroupsServices";
 import dynamoDynamoServices from "../../services/dynamoCommandsService";
 import { getCommandKey, hasCommand } from "../../utils/telegram";
 
-const putUser = async (from: TelegramUser) => {
+const putUser = async (from: UserTg) => {
   try {
     const { Items } = await usersDynamoService.getById(from?.id);
     if (!Items?.length) {
@@ -34,7 +26,7 @@ const putUser = async (from: TelegramUser) => {
   }
 };
 
-const putGroup = async (chat: TelegramChat) => {
+const putGroup = async (chat: ChatTg) => {
   try {
     const { Items } = await groupsDynamoServices.getById(chat?.id);
     if (!Items?.length) {
@@ -48,7 +40,7 @@ const putGroup = async (chat: TelegramChat) => {
   }
 };
 
-const sendToEndpointCommand = async (body: TelegramUpdate) => {
+const sendToEndpointCommand = async (body: UpdateTg) => {
   try {
     const { offset, length } = getCommandKey(body);
     const command = body?.message?.text?.substring(offset, length);
@@ -67,7 +59,7 @@ const sendToEndpointCommand = async (body: TelegramUpdate) => {
 };
 
 export const execute = async (
-  body: TelegramUpdate
+  body: UpdateTg
 ): Promise<{ statusCode: number; body?: string }> => {
   await Promise.all([
     putUser(body?.message?.from),

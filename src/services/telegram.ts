@@ -1,5 +1,5 @@
 import axios, { AxiosResponse } from "axios";
-import { TelegramEntity, TelegramUser } from "../models";
+import { EntityTg, UserTg } from "../models";
 
 const { TELEGRAM_BOT_TOKEN } = process.env;
 
@@ -35,16 +35,16 @@ export const sendMessage = async (params: {
   message_thread_id?: number;
   text: string;
   parse_mode?: string;
-  entities?: Array<TelegramEntity>;
+  entities?: Array<EntityTg>;
   reply_to_message_id?: number;
   reply_markup?: any;
 }): Promise<
   AxiosResponse<{
     message_id: number;
     message_thread_id: number;
-    from: TelegramUser;
+    from: UserTg;
     sender_chat: any;
     date: number;
-    entities: Array<TelegramEntity>;
+    entities: Array<EntityTg>;
   }>
 > => await telegramService.post("/sendMessage", params);
