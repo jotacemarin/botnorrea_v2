@@ -49,3 +49,4 @@ functions:
   botnorreaCreateApiKey: ${file(./src/functions/botnorrea_create_api_key/function.yml)}
   botnorreaCommandsCreate: ${file(./src/functions/botnorrea_commands_create/function.yml)}
   botnorreaCommandsList: ${file(./src/functions/botnorrea_commands_list/function.yml)}
+  botnorreaCommandsRemove: ${file(./src/functions/botnorrea_commands_remove/function.yml)}
