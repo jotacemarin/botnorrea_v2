@@ -69,11 +69,12 @@ const getByUuid = async (uuid: string) => {
 const getByApiKey = async (apiKey: string) => {
   return await scanCommand({
     TableName: tableCommands,
-    ProjectionExpression: "#command, #apiKey, #endpoint",
+    ProjectionExpression: "#command, #apiKey, #endpoint, #description",
     ExpressionAttributeNames: {
       "#command": "command",
       "#apiKey": "apiKey",
       "#endpoint": "endpoint",
+      "#description": "description",
     },
     ExpressionAttributeValues: {
       ":apiKey": apiKey,
