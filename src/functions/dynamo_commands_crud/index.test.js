@@ -1,5 +1,7 @@
 import { OK, NOT_FOUND, CREATED, NO_CONTENT } from "http-status";
-import commandsDynamoService from "../../services/dynamoCommandsService";
+import commandsDynamoService, {
+  CommandsError,
+} from "../../services/dynamoCommandsService";
 import { Role } from "../../models";
 import { methods } from "./index";
 
@@ -19,7 +21,7 @@ describe("methods", () => {
   });
 
   it("should handle GET method with no items", async () => {
-    commandsDynamoService.getByUuid.mockResolvedValueOnce({ Items: [] });
+    commandsDynamoService.getByUuid.mockResolvedValueOnce();
 
     await expect(methods.GET({ uuid: "mockId" }, mockUser)).resolves.toEqual({
       statusCode: NOT_FOUND,

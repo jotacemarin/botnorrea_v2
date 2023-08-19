@@ -36,22 +36,22 @@ export interface DynamoDBCommand {
 
 export const scanCommand = async (params: DynamoDBCommand) => {
   const command = new ScanCommand(params);
-  return await docClient.send(command);
+  return docClient.send(command);
 };
 
 export const queryCommand = async (params: DynamoDBCommand) => {
   const command = new QueryCommand(params as any);
-  return await docClient.send(command);
+  return docClient.send(command);
 };
 
 export const getCommand = async (params: DynamoDBCommand) => {
   const command = new GetCommand(params as any);
-  return await docClient.send(command);
+  return docClient.send(command);
 };
 
 export const putCommand = async (params: DynamoDBCommand) => {
   const command = new PutCommand(params as any);
-  return await docClient.send(command);
+  return docClient.send(command);
 };
 
 export const updateCommand = async (params: DynamoDBCommand) => {
@@ -59,10 +59,10 @@ export const updateCommand = async (params: DynamoDBCommand) => {
     ReturnValues: "ALL_NEW",
     ...params,
   } as any);
-  return await docClient.send(command);
+  return docClient.send(command);
 };
 
 export const deleteCommand = async (params: DynamoDBCommand) => {
   const command = new DeleteCommand(params as any);
-  return await docClient.send(command);
+  return docClient.send(command);
 };

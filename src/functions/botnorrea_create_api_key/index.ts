@@ -20,19 +20,23 @@ import { sendMessage } from "../../services/telegram";
 
 const { BOT_NAME, BOT_DOMAIN } = process.env;
 
+const buildText = (
+  currentUser: User,
+  apiKey: string
+) => `Done! You can now add a new commands to ${String(BOT_NAME).replace(
+  /-prod/gi,
+  ""
+)}.
+
+username: <code>${currentUser?.uuid}</code>
+password: <code>${apiKey}</code>
+
+Use these username and password as Basic Auth to ${BOT_DOMAIN}/telegram/send-message`;
+
 export const execute = async (
   body: UpdateTg
 ): Promise<{ statusCode: number; body?: string }> => {
-  const { Items } = await usersDynamoService.getById(body?.message?.from?.id);
-  if (!Items?.length) {
-    return { statusCode: NOT_FOUND };
-  }
-
-  const [Item] = Items;
-  const currentUser: User = await usersDynamoService.get(Item?.uuid);
-  if (!currentUser) {
-    return { statusCode: NOT_FOUND };
-  }
+  const currentUser = await usersDynamoService.getById(body?.message?.from?.id);
 
   if (body?.message?.chat?.type !== ChatTypeTg.PRIVATE) {
     await sendMessage({
@@ -57,12 +61,7 @@ export const execute = async (
     await usersDynamoService.update({ ...currentUser, apiKey }, true);
     await sendMessage({
       chat_id: body?.message?.chat?.id,
-      text: `Done! You can now add a new commands to ${String(BOT_NAME).replace(/-prod/ig, "")}.
-
-username: <code>${currentUser?.uuid}</code>
-password: <code>${apiKey}</code>
-
-Use these username and password as Basic Auth to ${BOT_DOMAIN}/telegram/send-message`, // To do: 🐸🐶☠️ change bot domain
+      text: buildText(currentUser, apiKey),
       reply_to_message_id: body?.message?.message_id,
       protect_content: true,
       parse_mode: FormattingOptionsTg.HTML,

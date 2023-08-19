@@ -4,6 +4,7 @@ import {
   BAD_REQUEST,
   INTERNAL_SERVER_ERROR,
   NOT_FOUND,
+  UNPROCESSABLE_ENTITY,
 } from "http-status";
 import { getCommand, putCommand, scanCommand, updateCommand } from "./dynamodb";
 
@@ -28,7 +29,33 @@ const get = async (uuid: string | number): Promise<Group> => {
   return Item as Group;
 };
 
-const create = async (params: ChatTg) => {
+const getById = async (id: string | number): Promise<Group | undefined> => {
+  const { Items } = await scanCommand({
+    TableName: tableGroups,
+    ProjectionExpression: "#uuid, #id",
+    ExpressionAttributeNames: {
+      "#uuid": "uuid",
+      "#id": "id",
+    },
+    ExpressionAttributeValues: {
+      ":id": id,
+    },
+    FilterExpression: "id = :id",
+  });
+
+  if (!Items?.length) {
+    return;
+  }
+
+  if (Items?.length > 1) {
+    throw new GroupsError("Unprocessable entity", UNPROCESSABLE_ENTITY);
+  }
+
+  const [Item] = Items;
+  return get(Item?.uuid);
+};
+
+const create = async (params: ChatTg): Promise<Group> => {
   const timestamp = new Date().getTime();
   const uuid = randomUUID();
   const group: Group = {
@@ -39,7 +66,7 @@ const create = async (params: ChatTg) => {
     updatedAt: timestamp,
   };
   await putCommand({ TableName: tableGroups, Item: group });
-  return await get(uuid);
+  return get(uuid);
 };
 
 const update = async (params: Group): Promise<Group> => {
@@ -78,22 +105,7 @@ const update = async (params: Group): Promise<Group> => {
     ExpressionAttributeNames,
   });
 
-  return await get(Item?.uuid);
+  return get(Item?.uuid);
 };
 
-const getById = async (id: string | number) => {
-  return await scanCommand({
-    TableName: tableGroups,
-    ProjectionExpression: "#uuid, #id",
-    ExpressionAttributeNames: {
-      "#uuid": "uuid",
-      "#id": "id",
-    },
-    ExpressionAttributeValues: {
-      ":id": id,
-    },
-    FilterExpression: "id = :id",
-  });
-};
-
-export default { get, create, update, getById };
+export default { get, getById, create, update };

@@ -1,10 +1,10 @@
 import { randomUUID } from "crypto";
-import { Role, User } from "../models";
 import {
   BAD_GATEWAY,
   BAD_REQUEST,
   INTERNAL_SERVER_ERROR,
   NOT_FOUND,
+  UNPROCESSABLE_ENTITY,
 } from "http-status";
 import {
   deleteCommand,
@@ -13,6 +13,7 @@ import {
   scanCommand,
   updateCommand,
 } from "./dynamodb";
+import { Role, User } from "../models";
 import { buildExpressions } from "../utils/dynamoDbHelper";
 
 const { DYNAMODB_TABLE_USERS } = process.env;
@@ -33,6 +34,32 @@ const get = async (uuid: string | number): Promise<User> => {
   return Item as User;
 };
 
+const getById = async (id: string | number): Promise<User | undefined> => {
+  const { Items } = await scanCommand({
+    TableName: tableUsers,
+    ProjectionExpression: "#uuid, #id",
+    ExpressionAttributeNames: {
+      "#uuid": "uuid",
+      "#id": "id",
+    },
+    ExpressionAttributeValues: {
+      ":id": id,
+    },
+    FilterExpression: "id = :id",
+  });
+  
+  if (!Items?.length) {
+    return;
+  }
+
+  if (Items?.length > 1) {
+    throw new UsersError("Unprocessable entity", UNPROCESSABLE_ENTITY);
+  }
+
+  const [Item] = Items;
+  return get(Item?.uuid);
+};
+
 const create = async (
   params: User,
   editAsAdmin: boolean = false
@@ -48,7 +75,7 @@ const create = async (
     updatedAt: timestamp,
   };
   await putCommand({ TableName: tableUsers, Item: user });
-  return await get(uuid);
+  return get(uuid);
 };
 
 const update = async (
@@ -96,26 +123,11 @@ const update = async (
     ExpressionAttributeNames,
   });
 
-  return await get(Item?.uuid);
+  return get(Item?.uuid);
 };
 
 const remove = async (uuid: string | number) => {
   await deleteCommand({ TableName: tableUsers, Key: { uuid } });
 };
 
-const getById = async (id: string | number) => {
-  return await scanCommand({
-    TableName: tableUsers,
-    ProjectionExpression: "#uuid, #id",
-    ExpressionAttributeNames: {
-      "#uuid": "uuid",
-      "#id": "id",
-    },
-    ExpressionAttributeValues: {
-      ":id": id,
-    },
-    FilterExpression: "id = :id",
-  });
-};
-
-export default { get, create, update, remove, getById };
+export default { get, getById, create, update, remove };

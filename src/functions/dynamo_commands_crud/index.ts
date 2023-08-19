@@ -9,11 +9,10 @@ import {
   NO_CONTENT,
   UNAUTHORIZED,
   FORBIDDEN,
+  BAD_REQUEST,
 } from "http-status";
 import { Command, Role, User } from "../../models";
-import commandsDynamoService, {
-  CommandsError,
-} from "../../services/dynamoCommandsService";
+import commandsDynamoService from "../../services/dynamoCommandsService";
 
 const hasAuthorization = (user: User): boolean => {
   if (!user?.role) {
@@ -24,32 +23,31 @@ const hasAuthorization = (user: User): boolean => {
 };
 
 const get = async ({ uuid }: { uuid: string }, user: User) => {
-  const { Items } = await commandsDynamoService.getByUuid(uuid);
-  if (!Items?.length) {
+  const foundCommand = await commandsDynamoService.getByUuid(uuid);
+  if (!foundCommand) {
     return { statusCode: NOT_FOUND };
   }
 
-  if (Items.length > 1) {
-    return { statusCode: FORBIDDEN };
-  }
-
-  const [Item] = Items;
   if (hasAuthorization(user)) {
-    return { statusCode: OK, body: JSON.stringify(Item) };
+    return { statusCode: OK, body: JSON.stringify(foundCommand) };
   }
 
   const command: Command = {
-    command: Item?.command,
-    endpoint: Item?.endpoint,
-    isEnabled: Item?.isEnabled,
-    updatedAt: Item?.updatedAt,
-    createdAt: Item?.createdAt,
+    command: foundCommand?.command,
+    endpoint: foundCommand?.endpoint,
+    isEnabled: foundCommand?.isEnabled,
+    updatedAt: foundCommand?.updatedAt,
+    createdAt: foundCommand?.createdAt,
   };
 
   return { statusCode: OK, body: JSON.stringify(command) };
 };
 
-const post = async (params: JSON | Object | any, user: User) => {
+const post = async (params: Command, user: User) => {
+  if (!user?.apiKey) {
+    return { statusCode: BAD_REQUEST };
+  }
+
   const command: Command = {
     ...params,
     isEnabled: true,
@@ -59,25 +57,22 @@ const post = async (params: JSON | Object | any, user: User) => {
   return { statusCode: CREATED, body: JSON.stringify(Item) };
 };
 
-const update = async (params: JSON | Object | any, user: User) => {
-  const Item = await commandsDynamoService.update(params, user);
+const update = async (params: Command, user: User) => {
+  const foundCommand = await commandsDynamoService.update(params, user);
 
-  if (hasAuthorization(user) || Item?.apiKey === user?.apiKey) {
-    return { statusCode: OK, body: JSON.stringify(Item) };
+  if (hasAuthorization(user) || foundCommand?.apiKey === user?.apiKey) {
+    return { statusCode: OK, body: JSON.stringify(foundCommand) };
   }
 
   const command: Command = {
-    command: Item?.command,
-    endpoint: Item?.endpoint,
-    isEnabled: Item?.isEnabled,
-    updatedAt: Item?.updatedAt,
-    createdAt: Item?.createdAt,
+    command: foundCommand?.command,
+    endpoint: foundCommand?.endpoint,
+    isEnabled: foundCommand?.isEnabled,
+    updatedAt: foundCommand?.updatedAt,
+    createdAt: foundCommand?.createdAt,
   };
 
-  return {
-    statusCode: OK,
-    body: JSON.stringify(command),
-  };
+  return { statusCode: OK, body: JSON.stringify(command) };
 };
 
 const remove = async ({ uuid }: { uuid: string }) => {
@@ -112,7 +107,7 @@ export const dynamoDBCommandsCrud = async (
     const user: User = JSON.parse(contextCustom["Botnorrea-v2"] ?? "{}");
 
     if (!user?.apiKey) {
-      throw new CommandsError("Unauthorized", UNAUTHORIZED);
+      return callback(null, { statusCode: UNAUTHORIZED });
     }
 
     const body =

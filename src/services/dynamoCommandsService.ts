@@ -6,6 +6,7 @@ import {
   INTERNAL_SERVER_ERROR,
   NOT_FOUND,
   UNAUTHORIZED,
+  UNPROCESSABLE_ENTITY,
 } from "http-status";
 import {
   deleteCommand,
@@ -20,7 +21,7 @@ import { Command, Role, User } from "../models";
 const { DYNAMODB_TABLE_COMMANDS } = process.env;
 const tableCommands = `${DYNAMODB_TABLE_COMMANDS}`;
 
-export class CommandsError extends Error {
+class CommandsError extends Error {
   statusCode: number = INTERNAL_SERVER_ERROR;
 
   constructor(message: string, statusCode: number) {
@@ -42,32 +43,42 @@ const hasAuthorization = (apiKey: string, user: User) => {
   return apiKey === user?.apiKey;
 };
 
-const get = async (command: string): Promise<Command> => {
-  const { Item } = await getCommand({
+const get = async (commandKey: string): Promise<Command> => {
+  const { Item: command } = await getCommand({
     TableName: tableCommands,
-    Key: { command },
+    Key: { command: commandKey },
   });
-  return Item as Command;
+  return command as Command;
 };
 
-const getByUuid = async (uuid: string) => {
-  return await scanCommand({
+const getByUuid = async (uuid: string): Promise<Command | undefined> => {
+  const { Items } = await scanCommand({
     TableName: tableCommands,
-    ProjectionExpression: "#command, #endpoint, #uuid",
+    ProjectionExpression: "#command, #uuid",
     ExpressionAttributeNames: {
       "#uuid": "uuid",
       "#command": "command",
-      "#endpoint": "endpoint",
     },
     ExpressionAttributeValues: {
       ":uuid": uuid,
     },
     FilterExpression: "uuid = :uuid",
   });
+
+  if (!Items?.length) {
+    return;
+  }
+
+  if (Items?.length > 1) {
+    throw new CommandsError("Unprocessable entity", UNPROCESSABLE_ENTITY);
+  }
+
+  const [Item] = Items;
+  return get(Item?.command);
 };
 
-const getByApiKey = async (apiKey: string) => {
-  return await scanCommand({
+const getByApiKey = async (apiKey: string): Promise<Array<Command>> => {
+  const { Items: commands } = await scanCommand({
     TableName: tableCommands,
     ProjectionExpression: "#command, #apiKey, #endpoint, #description",
     ExpressionAttributeNames: {
@@ -81,11 +92,13 @@ const getByApiKey = async (apiKey: string) => {
     },
     FilterExpression: "apiKey = :apiKey",
   });
+
+  return commands as Array<Command>;
 };
 
 const create = async (params: Command): Promise<Command> => {
-  const Item = await get(`${params?.command}`);
-  if (Item) {
+  const foundCommand = await get(`${params?.command}`);
+  if (foundCommand) {
     throw new CommandsError("Forbidden", FORBIDDEN);
   }
 
@@ -99,7 +112,7 @@ const create = async (params: Command): Promise<Command> => {
   };
 
   await putCommand({ TableName: tableCommands, Item: command });
-  return await get(`${command?.command}`);
+  return get(`${command?.command}`);
 };
 
 const update = async (params: Command, user: User): Promise<Command> => {
@@ -107,22 +120,22 @@ const update = async (params: Command, user: User): Promise<Command> => {
     throw new CommandsError("Bad request", BAD_REQUEST);
   }
 
-  const Item = await get(params?.uuid);
-  if (!Item) {
+  const foundCommand = await get(params?.uuid);
+  if (!foundCommand) {
     throw new CommandsError("Not found", NOT_FOUND);
   }
 
-  if (!Item?.command) {
+  if (!foundCommand?.command) {
     throw new CommandsError("Bad gateway", BAD_GATEWAY);
   }
 
-  if (!hasAuthorization(`${Item?.apiKey}`, user)) {
+  if (!hasAuthorization(`${foundCommand?.apiKey}`, user)) {
     throw new CommandsError("Unauthorized", UNAUTHORIZED);
   }
 
   const timestamp = new Date().getTime();
   const command: Command = {
-    ...Item,
+    ...foundCommand,
     ...params,
     updatedAt: timestamp,
   };
@@ -136,13 +149,13 @@ const update = async (params: Command, user: User): Promise<Command> => {
 
   await updateCommand({
     TableName: tableCommands,
-    Key: { command: Item?.command },
+    Key: { command: foundCommand?.command },
     ExpressionAttributeValues,
     UpdateExpression,
     ExpressionAttributeNames,
   });
 
-  return await get(Item?.command);
+  return get(foundCommand?.command);
 };
 
 const remove = async (command: string) => {
