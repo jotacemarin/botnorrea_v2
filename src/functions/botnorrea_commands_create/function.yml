@@ -5,7 +5,7 @@ timeout: 30
 reservedConcurrency: 20
 events: 
   - http: 
-      path: /${self:custom.secrets.service.name}-${self:custom.secrets.provider.stage}/botnorrea/comands-create
+      path: /${self:custom.secrets.service.name}-${self:custom.secrets.provider.stage}/botnorrea/commands-create
       method: POST
       request:
         parameters:
