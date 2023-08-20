@@ -6,7 +6,15 @@ import {
   UNAUTHORIZED,
 } from "http-status";
 import axios from "axios";
-import { Role, User, Group, UserTg, ChatTg, UpdateTg } from "../../models";
+import {
+  Role,
+  User,
+  Group,
+  UserTg,
+  ChatTg,
+  UpdateTg,
+  ChatTypeTg,
+} from "../../models";
 import usersDynamoService from "../../services/dynamoUsersService";
 import groupsDynamoServices from "../../services/dynamoGroupsServices";
 import commandsDynamoServices from "../../services/dynamoCommandsService";
@@ -14,46 +22,49 @@ import { getCommandKey, hasCommand } from "../../utils/telegram";
 
 const putUser = async (from: UserTg) => {
   try {
-    const { Items } = await usersDynamoService.getById(from?.id);
-    if (!Items?.length) {
-      return await usersDynamoService.create(from);
+    const currentUser = await usersDynamoService.getById(from?.id);
+    if (!currentUser) {
+      return usersDynamoService.create(from);
     }
-    const [Item] = Items;
-    const user: User = { ...Item, username: from?.username };
-    return await usersDynamoService.update(user);
+
+    const user: User = { ...currentUser, username: from?.username };
+    return usersDynamoService.update(user);
   } catch (error) {
     console.error(`telegram_webhook.putUser: ${error?.message}`, error);
   }
 };
 
 const putGroup = async (chat: ChatTg) => {
+  if (chat?.type === ChatTypeTg.PRIVATE) {
+    return;
+  }
+
   try {
-    const { Items } = await groupsDynamoServices.getById(chat?.id);
-    if (!Items?.length) {
-      return await groupsDynamoServices.create(chat);
+    const foundGroup = await groupsDynamoServices.getById(chat?.id);
+    if (!foundGroup) {
+      return groupsDynamoServices.create(chat);
     }
-    const [Item] = Items;
-    const group: Group = { ...Item, title: chat?.title };
-    return await groupsDynamoServices.update(group);
+
+    const group: Group = { ...foundGroup, title: chat?.title };
+    return groupsDynamoServices.update(group);
   } catch (error) {
     console.error(`telegram_webhook.putGroup: ${error?.message}`, error);
   }
 };
 
 const sendToEndpointCommand = async (body: UpdateTg) => {
-  try {
-    const { offset, length } = getCommandKey(body);
-    const command = body?.message?.text?.substring(offset, length);
-    const { endpoint } = await commandsDynamoServices.get(command);
-    if (!endpoint) {
-      return;
-    }
+  const { offset, length } = getCommandKey(body);
+  const commandInMessage = body?.message?.text?.substring(offset, length);
+  const command = await commandsDynamoServices.get(commandInMessage);
+  if (!command?.endpoint) {
+    return;
+  }
 
-    await axios.post(endpoint, body);
+  try {
+    await axios.post(command?.endpoint, body);
   } catch (error) {
     console.error(
-      `telegram_webhook.sendToEndpointCommand: ${error?.message}`,
-      error
+      `telegram_webhook: POST ${command?.endpoint} - ${error?.message}`
     );
   }
 };

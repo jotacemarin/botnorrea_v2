@@ -3,9 +3,7 @@ import {
   APIGatewayTokenAuthorizerEvent,
 } from "aws-lambda";
 import { User } from "../../models";
-import { getCommand } from "../../services/dynamodb";
-
-const { DYNAMODB_TABLE_USERS } = process.env;
+import usersDynamoService from "../../services/dynamoUsersService";
 
 export const buildPolicy = (
   methodArn: string,
@@ -30,12 +28,7 @@ export const buildPolicy = (
 
 export const execute = async (token: string, methodArn: string) => {
   const [id, apiKey] = atob(token).split(":");
-  const data = await getCommand({
-    TableName: `${DYNAMODB_TABLE_USERS}`,
-    Key: { uuid: id },
-  });
-
-  const user = data?.Item as User;
+  const user = await usersDynamoService.getById(id);
   if (user?.apiKey !== apiKey) {
     return buildPolicy(methodArn);
   }
@@ -49,7 +42,7 @@ export const authorizer = async (
   const start = new Date().getTime();
   try {
     const [_, basicToken] = event?.authorizationToken?.split(" ");
-    return await execute(basicToken, event?.methodArn);
+    return execute(basicToken, event?.methodArn);
   } catch (error) {
     console.error(`authorizer: ${error?.message}`, error);
     return buildPolicy(event?.methodArn);
