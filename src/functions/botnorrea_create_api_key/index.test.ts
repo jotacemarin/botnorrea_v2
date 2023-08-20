@@ -1,10 +1,10 @@
 import { OK, FORBIDDEN, NOT_FOUND } from "http-status";
 import { FormattingOptionsTg } from "../../models";
-import usersDynamoService from "../../services/dynamoUsersService";
+import usersDynamoService from "../../services/dynamoUsersServices";
 import { sendMessage } from "../../services/telegram";
 import { execute } from "./index";
 
-jest.mock("../../services/dynamoUsersService");
+jest.mock("../../services/dynamoUsersServices");
 jest.mock("../../services/telegram");
 
 describe("execute", () => {

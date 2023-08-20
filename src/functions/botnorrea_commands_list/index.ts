@@ -8,8 +8,8 @@ import {
   UNAUTHORIZED,
 } from "http-status";
 import { FormattingOptionsTg, Role, UpdateTg, User } from "../../models";
-import usersDynamoService from "../../services/dynamoUsersService";
-import commandsDynamoServices from "../../services/dynamoCommandsService";
+import usersDynamoService from "../../services/dynamoUsersServices";
+import commandsDynamoServices from "../../services/dynamoCommandsServices";
 import { sendMessage } from "../../services/telegram";
 
 export const execute = async (

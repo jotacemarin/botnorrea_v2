@@ -1,19 +1,21 @@
 import { execute } from "./index";
-import usersDynamoService from "../../services/dynamoUsersService";
-import commandsDynamoServices from "../../services/dynamoCommandsService";
+import { ChatTypeTg } from "../../models";
+import usersDynamoService from "../../services/dynamoUsersServices";
+import commandsDynamoServices from "../../services/dynamoCommandsServices";
 import { sendMessage } from "../../services/telegram";
-import { FORBIDDEN, NOT_FOUND, OK } from "http-status";
+import { FORBIDDEN, NOT_FOUND, OK, UNAUTHORIZED } from "http-status";
 
-jest.mock("../../services/dynamoUsersService");
-jest.mock("../../services/dynamoCommandsService");
+jest.mock("../../services/dynamoUsersServices");
+jest.mock("../../services/dynamoCommandsServices");
 jest.mock("../../services/telegram");
 
 describe("execute", () => {
   const mockUpdateTgPrivate = {
     message: {
       from: { id: "mockUserId" },
-      chat: { id: "mockChatId", type: "private" },
+      chat: { id: "mockChatId", type: ChatTypeTg.PRIVATE },
       message_id: "mockMessageId",
+      text: "/commands_remove mockCommand",
     },
   };
 
@@ -22,17 +24,17 @@ describe("execute", () => {
     apiKey: "mockApiKey",
   };
 
-  const mockCommandItems = [
-    { command: "/command1", description: "Description 1" },
-    { command: "/command2", description: "Description 2" },
-  ];
+  const mockCommand = {
+    command: "/mockCommand",
+    apiKey: "mockApiKey",
+  };
 
   afterEach(() => {
     jest.clearAllMocks();
   });
 
   it("should handle user not found", async () => {
-    usersDynamoService.getById.mockResolvedValueOnce(undefined);
+    usersDynamoService.getById.mockResolvedValueOnce();
 
     const result = await execute(mockUpdateTgPrivate);
 
@@ -49,8 +51,9 @@ describe("execute", () => {
     expect(result).toEqual({ statusCode: FORBIDDEN });
   });
 
-  it("should handle user without apiKey", async () => {
+  it("should handle missing apiKey", async () => {
     usersDynamoService.getById.mockResolvedValueOnce({});
+    usersDynamoService.get.mockResolvedValueOnce({ uuid: "mockUserUuid" });
 
     const result = await execute(mockUpdateTgPrivate);
 
@@ -63,39 +66,50 @@ describe("execute", () => {
     expect(result).toEqual({ statusCode: FORBIDDEN });
   });
 
-  it("should fetch and send commands", async () => {
+  it("should handle command not found", async () => {
     usersDynamoService.getById.mockResolvedValueOnce(mockUserItem);
-    commandsDynamoServices.getByApiKey.mockResolvedValueOnce(mockCommandItems);
+    commandsDynamoServices.get.mockResolvedValueOnce(null);
 
     const result = await execute(mockUpdateTgPrivate);
 
     expect(usersDynamoService.getById).toHaveBeenCalledWith("mockUserId");
-    expect(commandsDynamoServices.getByApiKey).toHaveBeenCalledWith(
-      "mockApiKey"
-    );
+    expect(commandsDynamoServices.get).toHaveBeenCalledWith("/mockCommand");
     expect(sendMessage).toHaveBeenCalledWith(
       expect.objectContaining({
-        text: "/command1 - Description 1\n/command2 - Description 2",
-      })
-    );
-    expect(result).toEqual({ statusCode: OK });
-  });
-
-  it("should handle no commands found", async () => {
-    usersDynamoService.getById.mockResolvedValueOnce(mockUserItem);
-    commandsDynamoServices.getByApiKey.mockResolvedValueOnce({ Items: [] });
-
-    const result = await execute(mockUpdateTgPrivate);
-
-    expect(usersDynamoService.getById).toHaveBeenCalledWith("mockUserId");
-    expect(commandsDynamoServices.getByApiKey).toHaveBeenCalledWith(
-      "mockApiKey"
-    );
-    expect(sendMessage).toHaveBeenCalledWith(
-      expect.objectContaining({
-        text: "Not found",
+        text: `Command /mockCommand does not exists!`,
       })
     );
     expect(result).toEqual({ statusCode: NOT_FOUND });
+  });
+
+  it("should handle unauthorized deletion", async () => {
+    usersDynamoService.getById.mockResolvedValueOnce({ ...mockUserItem, apiKey: "tEst1234" });
+    commandsDynamoServices.get.mockResolvedValueOnce(mockCommand);
+
+    const result = await execute(mockUpdateTgPrivate);
+
+    expect(usersDynamoService.getById).toHaveBeenCalledWith("mockUserId");
+    expect(sendMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        text: `Unauthorized, you cannot delete this /mockCommand!`,
+      })
+    );
+    expect(result).toEqual({ statusCode: UNAUTHORIZED });
+  });
+
+  it("should remove command successfully", async () => {
+    usersDynamoService.getById.mockResolvedValueOnce(mockUserItem);
+    commandsDynamoServices.get.mockResolvedValueOnce(mockCommand);
+
+    const result = await execute(mockUpdateTgPrivate);
+
+    expect(usersDynamoService.getById).toHaveBeenCalledWith("mockUserId");
+    expect(commandsDynamoServices.remove).toHaveBeenCalledWith("/mockCommand");
+    expect(sendMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        text: `Command /mockCommand removed successfuly!`,
+      })
+    );
+    expect(result).toEqual({ statusCode: OK });
   });
 });

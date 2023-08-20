@@ -9,7 +9,7 @@ import {
   OK,
 } from "http-status";
 import { Role, User } from "../../models";
-import usersDynamoService from "../../services/dynamoUsersService";
+import usersDynamoService from "../../services/dynamoUsersServices";
 
 const get = async ({ uuid }: { uuid: string | number }) => {
   const Item = await usersDynamoService.get(uuid);

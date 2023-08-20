@@ -1,11 +1,11 @@
 import { OK, NOT_FOUND, CREATED, NO_CONTENT } from "http-status";
 import commandsDynamoService, {
   CommandsError,
-} from "../../services/dynamoCommandsService";
+} from "../../services/dynamoCommandsServices";
 import { Role } from "../../models";
 import { methods } from "./index";
 
-jest.mock("../../services/dynamoCommandsService");
+jest.mock("../../services/dynamoCommandsServices");
 
 describe("methods", () => {
   const mockUser = { apiKey: "mockApiKey", role: Role.USER };

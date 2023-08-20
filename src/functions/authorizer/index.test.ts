@@ -1,7 +1,7 @@
 import { execute, buildPolicy } from "./index";
-import usersDynamoService from "../../services/dynamoUsersService";
+import usersDynamoService from "../../services/dynamoUsersServices";
 
-jest.mock("../../services/dynamoUsersService");
+jest.mock("../../services/dynamoUsersServices");
 
 describe("execute", () => {
   const user = {

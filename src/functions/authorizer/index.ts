@@ -3,7 +3,7 @@ import {
   APIGatewayTokenAuthorizerEvent,
 } from "aws-lambda";
 import { User } from "../../models";
-import usersDynamoService from "../../services/dynamoUsersService";
+import usersDynamoService from "../../services/dynamoUsersServices";
 
 export const buildPolicy = (
   methodArn: string,

@@ -15,10 +15,10 @@ import {
   UpdateTg,
   ChatTypeTg,
 } from "../../models";
-import usersDynamoService from "../../services/dynamoUsersService";
+import usersDynamoService from "../../services/dynamoUsersServices";
 import groupsDynamoServices from "../../services/dynamoGroupsServices";
-import commandsDynamoServices from "../../services/dynamoCommandsService";
-import { getCommandKey, hasCommand } from "../../utils/telegram";
+import commandsDynamoServices from "../../services/dynamoCommandsServices";
+import { getCommandKey, hasCommand } from "../../utils/telegramHelper";
 
 const putUser = async (from: UserTg) => {
   try {

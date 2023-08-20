@@ -1,15 +1,15 @@
 import { execute } from "./index";
 import { BAD_REQUEST, FORBIDDEN, INTERNAL_SERVER_ERROR, OK } from "http-status";
-import usersDynamoService from "../../services/dynamoUsersService";
-import commandsDynamoServices from "../../services/dynamoCommandsService";
+import usersDynamoService from "../../services/dynamoUsersServices";
+import commandsDynamoServices from "../../services/dynamoCommandsServices";
 import { sendMessage } from "../../services/telegram";
 import axios from "axios";
 
 
 const logError = jest.spyOn(console, "error").mockImplementation(() => {});
 jest.mock("axios");
-jest.mock("../../services/dynamoUsersService");
-jest.mock("../../services/dynamoCommandsService");
+jest.mock("../../services/dynamoUsersServices");
+jest.mock("../../services/dynamoCommandsServices");
 jest.mock("../../services/telegram");
 
 describe("execute", () => {

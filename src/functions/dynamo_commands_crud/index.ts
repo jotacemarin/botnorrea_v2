@@ -12,7 +12,7 @@ import {
   BAD_REQUEST,
 } from "http-status";
 import { Command, Role, User } from "../../models";
-import commandsDynamoService from "../../services/dynamoCommandsService";
+import commandsDynamoService from "../../services/dynamoCommandsServices";
 
 const hasAuthorization = (user: User): boolean => {
   if (!user?.role) {

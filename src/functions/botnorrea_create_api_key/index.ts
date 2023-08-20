@@ -15,7 +15,7 @@ import {
   ChatTypeTg,
   FormattingOptionsTg,
 } from "../../models";
-import usersDynamoService from "../../services/dynamoUsersService";
+import usersDynamoService from "../../services/dynamoUsersServices";
 import { sendMessage } from "../../services/telegram";
 
 const { BOT_NAME, BOT_DOMAIN } = process.env;

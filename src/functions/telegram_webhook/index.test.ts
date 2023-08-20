@@ -1,5 +1,5 @@
 import { execute } from "./index";
-import usersDynamoService from "../../services/dynamoUsersService";
+import usersDynamoService from "../../services/dynamoUsersServices";
 import groupsDynamoServices from "../../services/dynamoGroupsServices";
 
 jest.mock("axios");
