@@ -7,6 +7,7 @@ import {
   OK,
   UNAUTHORIZED,
 } from "http-status";
+import axios from "axios";
 import {
   ChatTypeTg,
   Command,
@@ -18,6 +19,36 @@ import {
 import usersDynamoService from "../../services/dynamoUsersService";
 import commandsDynamoServices from "../../services/dynamoCommandsService";
 import { sendMessage } from "../../services/telegram";
+
+const mockUpdate = {
+  update_id: 1,
+  message: {
+    message_id: 1,
+    from: {
+      id: 1,
+      is_bot: true,
+      first_name: "string",
+      last_name: "string",
+      username: "string",
+      language_code: "string",
+    },
+    chat: {
+      id: 1,
+      title: "string",
+      type: "string",
+      all_members_are_administrators: false,
+    },
+    date: 1,
+    text: "string",
+    entities: [
+      {
+        offset: 1,
+        length: 1,
+        type: "string",
+      },
+    ],
+  },
+};
 
 const isUrl = (string: string) => {
   try {
@@ -31,35 +62,35 @@ const isUrl = (string: string) => {
 export const execute = async (
   body: UpdateTg
 ): Promise<{ statusCode: number; body?: string }> => {
-  const { Items } = await usersDynamoService.getById(body?.message?.from?.id);
-  if (!Items?.length) {
-    return { statusCode: NOT_FOUND };
-  }
-
-  const [Item] = Items;
-  const currentUser: User = await usersDynamoService.get(Item?.uuid);
-  if (!currentUser) {
-    return { statusCode: NOT_FOUND };
-  }
-  if (body?.message?.chat?.type !== ChatTypeTg.PRIVATE) {
-    await sendMessage({
-      chat_id: body?.message?.chat?.id,
-      text: "Please request your new API KEY in a private message!",
-      reply_to_message_id: body?.message?.message_id,
-    });
-    return { statusCode: FORBIDDEN };
-  }
-
-  if (!currentUser?.apiKey) {
-    await sendMessage({
-      chat_id: body?.message?.chat?.id,
-      text: "You don't have an API KEY please create one first using the command /create_api_key!",
-      reply_to_message_id: body?.message?.message_id,
-    });
-    return { statusCode: FORBIDDEN };
-  }
-
   try {
+    const { Items } = await usersDynamoService.getById(body?.message?.from?.id);
+    if (!Items?.length) {
+      return { statusCode: NOT_FOUND };
+    }
+
+    const [Item] = Items;
+    const currentUser: User = await usersDynamoService.get(Item?.uuid);
+    if (!currentUser) {
+      return { statusCode: NOT_FOUND };
+    }
+    if (body?.message?.chat?.type !== ChatTypeTg.PRIVATE) {
+      await sendMessage({
+        chat_id: body?.message?.chat?.id,
+        text: "Please request your new API KEY in a private message!",
+        reply_to_message_id: body?.message?.message_id,
+      });
+      return { statusCode: FORBIDDEN };
+    }
+
+    if (!currentUser?.apiKey) {
+      await sendMessage({
+        chat_id: body?.message?.chat?.id,
+        text: "You don't have an API KEY please create one first using the command /create_api_key!",
+        reply_to_message_id: body?.message?.message_id,
+      });
+      return { statusCode: FORBIDDEN };
+    }
+
     const parameters = body?.message?.text
       ?.replace(/\/commands_create/gi, "")
       .trim()
@@ -85,6 +116,19 @@ export const execute = async (
       return { statusCode: BAD_REQUEST };
     }
 
+    try {
+      await axios.post(endpoint, mockUpdate);
+    } catch (error) {
+      await sendMessage({
+        chat_id: body?.message?.chat?.id,
+        text: `Bad request.\n\nYour endpoint throw this message: <code>${error?.message}</code>`,
+        reply_to_message_id: body?.message?.message_id,
+        parse_mode: FormattingOptionsTg.HTML,
+      });
+
+      return { statusCode: BAD_REQUEST };
+    }
+
     const command: Command = await commandsDynamoServices.create({
       apiKey: currentUser?.apiKey,
       command: `/${commandKey.replace(/\//gi, "")}`,
@@ -97,6 +141,8 @@ export const execute = async (
       text: `Command ${command?.command} created successfuly!`,
       reply_to_message_id: body?.message?.message_id,
     });
+
+    return { statusCode: OK };
   } catch (error) {
     console.error(
       `botnorrea_commands_create.execute: ${error?.message}`,
@@ -110,8 +156,6 @@ export const execute = async (
     });
     return { statusCode: INTERNAL_SERVER_ERROR };
   }
-
-  return { statusCode: OK };
 };
 
 export const botnorreaCommandsCreate = async (
