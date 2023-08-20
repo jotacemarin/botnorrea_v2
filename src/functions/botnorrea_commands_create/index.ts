@@ -3,7 +3,6 @@ import {
   BAD_REQUEST,
   FORBIDDEN,
   INTERNAL_SERVER_ERROR,
-  NOT_FOUND,
   OK,
   UNAUTHORIZED,
 } from "http-status";
@@ -13,7 +12,6 @@ import {
   FormattingOptionsTg,
   Role,
   UpdateTg,
-  User,
 } from "../../models";
 import usersDynamoService from "../../services/dynamoUsersService";
 import commandsDynamoServices from "../../services/dynamoCommandsService";
@@ -31,60 +29,57 @@ const isUrl = (string: string) => {
 export const execute = async (
   body: UpdateTg
 ): Promise<{ statusCode: number; body?: string }> => {
-  const { Items } = await usersDynamoService.getById(body?.message?.from?.id);
-  if (!Items?.length) {
-    return { statusCode: NOT_FOUND };
-  }
-
-  const [Item] = Items;
-  const currentUser: User = await usersDynamoService.get(Item?.uuid);
-  if (!currentUser) {
-    return { statusCode: NOT_FOUND };
-  }
   if (body?.message?.chat?.type !== ChatTypeTg.PRIVATE) {
     await sendMessage({
       chat_id: body?.message?.chat?.id,
       text: "Please request your new API KEY in a private message!",
       reply_to_message_id: body?.message?.message_id,
     });
+
     return { statusCode: FORBIDDEN };
   }
 
+  const currentUser = await usersDynamoService.getById(body?.message?.from?.id);
   if (!currentUser?.apiKey) {
     await sendMessage({
       chat_id: body?.message?.chat?.id,
       text: "You don't have an API KEY please create one first using the command /create_api_key!",
       reply_to_message_id: body?.message?.message_id,
     });
+
     return { statusCode: FORBIDDEN };
   }
 
+  const parameters = body?.message?.text
+    ?.replace(/\/commands_create/gi, "")
+    .trim()
+    .split(" ");
+
+  if (parameters.length < 2) {
+    await sendMessage({
+      chat_id: body?.message?.chat?.id,
+      text: "Bad request.\n\nCommand usage: <code>/commands_create command_key url description*</code>\n\n<i>*description is optional</i>",
+      reply_to_message_id: body?.message?.message_id,
+      parse_mode: FormattingOptionsTg.HTML,
+    });
+
+    return { statusCode: BAD_REQUEST };
+  }
+
+  const [commandKey, endpoint, ...description] = parameters;
+  if (!isUrl(endpoint)) {
+    await sendMessage({
+      chat_id: body?.message?.chat?.id,
+      text: "Invalid URL",
+      reply_to_message_id: body?.message?.message_id,
+    });
+
+    return { statusCode: BAD_REQUEST };
+  }
+
+  // TO DO: URL validation issue #60
+
   try {
-    const parameters = body?.message?.text
-      ?.replace(/\/commands_create/gi, "")
-      .trim()
-      .split(" ");
-
-    if (parameters.length < 2) {
-      await sendMessage({
-        chat_id: body?.message?.chat?.id,
-        text: "Bad request.\n\nCommand usage: <code>/commands_create command_key url description*</code>\n\n<i>*description is optional</i>",
-        reply_to_message_id: body?.message?.message_id,
-        parse_mode: FormattingOptionsTg.HTML,
-      });
-      return { statusCode: BAD_REQUEST };
-    }
-
-    const [commandKey, endpoint, ...description] = parameters;
-    if (!isUrl(endpoint)) {
-      await sendMessage({
-        chat_id: body?.message?.chat?.id,
-        text: "Invalid URL",
-        reply_to_message_id: body?.message?.message_id,
-      });
-      return { statusCode: BAD_REQUEST };
-    }
-
     const command: Command = await commandsDynamoServices.create({
       apiKey: currentUser?.apiKey,
       command: `/${commandKey.replace(/\//gi, "")}`,
@@ -97,6 +92,8 @@ export const execute = async (
       text: `Command ${command?.command} created successfuly!`,
       reply_to_message_id: body?.message?.message_id,
     });
+
+    return { statusCode: OK };
   } catch (error) {
     console.error(
       `botnorrea_commands_create.execute: ${error?.message}`,
@@ -110,8 +107,6 @@ export const execute = async (
     });
     return { statusCode: INTERNAL_SERVER_ERROR };
   }
-
-  return { statusCode: OK };
 };
 
 export const botnorreaCommandsCreate = async (
@@ -143,10 +138,7 @@ export const botnorreaCommandsCreate = async (
     const response = await execute(body);
     return callback(null, response);
   } catch (error) {
-    console.error(
-      `botnorrea_commands_create.botnorreaCommandsCreate: ${error?.message}`,
-      error
-    );
+    console.error(`botnorrea_commands_create: ${error?.message}`, error);
     return callback(error, {
       statusCode: INTERNAL_SERVER_ERROR,
       body: error.message,

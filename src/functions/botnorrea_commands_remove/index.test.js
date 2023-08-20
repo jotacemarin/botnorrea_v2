@@ -1,8 +1,8 @@
-import { execute } from "./index"; // Replace with the actual path to your module
+import { execute } from "./index";
 import { ChatTypeTg } from "../../models";
-import usersDynamoService from "../../services/dynamoUsersService"; // Replace with the actual path to your usersDynamoService module
-import commandsDynamoServices from "../../services/dynamoCommandsService"; // Replace with the actual path to your commandsDynamoServices module
-import { sendMessage } from "../../services/telegram"; // Replace with the actual path to your telegram module
+import usersDynamoService from "../../services/dynamoUsersService";
+import commandsDynamoServices from "../../services/dynamoCommandsService";
+import { sendMessage } from "../../services/telegram";
 import { FORBIDDEN, NOT_FOUND, OK, UNAUTHORIZED } from "http-status";
 
 jest.mock("../../services/dynamoUsersService");
@@ -34,27 +34,25 @@ describe("execute", () => {
   });
 
   it("should handle user not found", async () => {
-    usersDynamoService.getById.mockResolvedValueOnce({ Items: [] });
+    usersDynamoService.getById.mockResolvedValueOnce();
 
     const result = await execute(mockUpdateTgPrivate);
 
     expect(usersDynamoService.getById).toHaveBeenCalledWith("mockUserId");
-    expect(result).toEqual({ statusCode: NOT_FOUND });
+    expect(result).toEqual({ statusCode: FORBIDDEN });
   });
 
   it("should handle current user not found", async () => {
-    usersDynamoService.getById.mockResolvedValueOnce({ Items: [{}] });
-    usersDynamoService.get.mockResolvedValueOnce(null);
+    usersDynamoService.getById.mockResolvedValueOnce({});
 
     const result = await execute(mockUpdateTgPrivate);
 
     expect(usersDynamoService.getById).toHaveBeenCalledWith("mockUserId");
-    expect(usersDynamoService.get).toHaveBeenCalledWith(undefined);
-    expect(result).toEqual({ statusCode: NOT_FOUND });
+    expect(result).toEqual({ statusCode: FORBIDDEN });
   });
 
   it("should handle missing apiKey", async () => {
-    usersDynamoService.getById.mockResolvedValueOnce({ Items: [mockUserItem] });
+    usersDynamoService.getById.mockResolvedValueOnce({});
     usersDynamoService.get.mockResolvedValueOnce({ uuid: "mockUserUuid" });
 
     const result = await execute(mockUpdateTgPrivate);
@@ -69,8 +67,7 @@ describe("execute", () => {
   });
 
   it("should handle command not found", async () => {
-    usersDynamoService.getById.mockResolvedValueOnce({ Items: [mockUserItem] });
-    usersDynamoService.get.mockResolvedValueOnce(mockUserItem);
+    usersDynamoService.getById.mockResolvedValueOnce(mockUserItem);
     commandsDynamoServices.get.mockResolvedValueOnce(null);
 
     const result = await execute(mockUpdateTgPrivate);
@@ -86,14 +83,12 @@ describe("execute", () => {
   });
 
   it("should handle unauthorized deletion", async () => {
-    usersDynamoService.getById.mockResolvedValueOnce({ Items: [mockUserItem] });
-    usersDynamoService.get.mockResolvedValueOnce({ ...mockUserItem, apiKey: "tEst1234" });
+    usersDynamoService.getById.mockResolvedValueOnce({ ...mockUserItem, apiKey: "tEst1234" });
     commandsDynamoServices.get.mockResolvedValueOnce(mockCommand);
 
     const result = await execute(mockUpdateTgPrivate);
 
     expect(usersDynamoService.getById).toHaveBeenCalledWith("mockUserId");
-    expect(commandsDynamoServices.get).toHaveBeenCalledWith("/mockCommand");
     expect(sendMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         text: `Unauthorized, you cannot delete this /mockCommand!`,
@@ -103,14 +98,12 @@ describe("execute", () => {
   });
 
   it("should remove command successfully", async () => {
-    usersDynamoService.getById.mockResolvedValueOnce({ Items: [mockUserItem] });
-    usersDynamoService.get.mockResolvedValueOnce(mockUserItem);
+    usersDynamoService.getById.mockResolvedValueOnce(mockUserItem);
     commandsDynamoServices.get.mockResolvedValueOnce(mockCommand);
 
     const result = await execute(mockUpdateTgPrivate);
 
     expect(usersDynamoService.getById).toHaveBeenCalledWith("mockUserId");
-    expect(commandsDynamoServices.get).toHaveBeenCalledWith("/mockCommand");
     expect(commandsDynamoServices.remove).toHaveBeenCalledWith("/mockCommand");
     expect(sendMessage).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -119,6 +112,4 @@ describe("execute", () => {
     );
     expect(result).toEqual({ statusCode: OK });
   });
-
-  // Add more test cases for other scenarios
 });

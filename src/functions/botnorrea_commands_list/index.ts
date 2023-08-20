@@ -15,43 +15,33 @@ import { sendMessage } from "../../services/telegram";
 export const execute = async (
   body: UpdateTg
 ): Promise<{ statusCode: number; body?: string }> => {
-  const { Items: usersItems } = await usersDynamoService.getById(
-    body?.message?.from?.id
-  );
-  if (!usersItems?.length) {
-    return { statusCode: NOT_FOUND };
-  }
-
-  const [userItem] = usersItems;
-  const currentUser: User = await usersDynamoService.get(userItem?.uuid);
-  if (!currentUser) {
-    return { statusCode: NOT_FOUND };
-  }
-
+  const currentUser = await usersDynamoService.getById(body?.message?.from?.id);
   if (!currentUser?.apiKey) {
     await sendMessage({
       chat_id: body?.message?.chat?.id,
       text: "You don't have an API KEY please create one first using the command /create_api_key!",
       reply_to_message_id: body?.message?.message_id,
     });
+
     return { statusCode: FORBIDDEN };
   }
 
-  const { Items: commandItems } = await commandsDynamoServices.getByApiKey(
+  const commands = await commandsDynamoServices.getByApiKey(
     currentUser?.apiKey
   );
-  if (!commandItems?.length) {
+  if (!commands?.length) {
     await sendMessage({
       chat_id: body?.message?.chat?.id,
       text: "Not found",
       reply_to_message_id: body?.message?.message_id,
     });
+
     return { statusCode: NOT_FOUND };
   }
 
   await sendMessage({
     chat_id: body?.message?.chat?.id,
-    text: commandItems
+    text: commands
       .map((item) => `${item?.command} - ${item?.description}`)
       .join("\n"),
     reply_to_message_id: body?.message?.message_id,
@@ -88,10 +78,7 @@ export const botnorreaCommandsList = async (
     const response = await execute(body);
     return callback(null, response);
   } catch (error) {
-    console.error(
-      `botnorrea_commands_create.botnorreaCommandsCreate: ${error?.message}`,
-      error
-    );
+    console.error(`botnorrea_commands_create: ${error?.message}`, error);
     return callback(error, {
       statusCode: INTERNAL_SERVER_ERROR,
       body: error.message,

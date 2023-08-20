@@ -20,23 +20,14 @@ const get = async ({ uuid }: { uuid: string | number }) => {
   return { statusCode: OK, body: JSON.stringify(Item) };
 };
 
-const post = async (
-  params: JSON | Object | any,
-  editAsAdmin: boolean = false
-) => {
+const post = async (params: User, editAsAdmin: boolean = false) => {
   const Item = await usersDynamoService.create(params, editAsAdmin);
   return { statusCode: CREATED, body: JSON.stringify(Item) };
 };
 
-const update = async (
-  params: JSON | Object | any,
-  editAsAdmin: boolean = false
-) => {
+const update = async (params: User, editAsAdmin: boolean = false) => {
   const Item = await usersDynamoService.update(params, editAsAdmin);
-  return {
-    statusCode: OK,
-    body: JSON.stringify(Item),
-  };
+  return { statusCode: OK, body: JSON.stringify(Item) };
 };
 
 const remove = async ({ uuid }: { uuid: string }) => {
@@ -69,20 +60,16 @@ export const dynamoDBUsersCrud = async (
 
     const contextCustom = event?.requestContext?.authorizer ?? {};
     const user: User = JSON.parse(contextCustom["Botnorrea-v2"] ?? "{}");
-    const canEditAsAdmin =
-      user?.role && [Role.ROOT, Role.ADMIN].includes(user?.role);
+    const canEditAsAdmin = user?.role && [Role.ROOT, Role.ADMIN].includes(user?.role);
 
-    const body =
-      pathParameters && pathParameters?.id
-        ? { uuid: pathParameters?.id }
-        : JSON.parse(bodyString ?? "{}");
+    const body = pathParameters && pathParameters?.id
+      ? { uuid: pathParameters?.id }
+      : JSON.parse(bodyString ?? "{}");
     const response = await methods[httpMethod](body, canEditAsAdmin);
+
     return callback(null, { statusCode: OK, ...response });
   } catch (error) {
-    console.error(
-      `dynamo_users_crud.dynamoDBUsersCrud: ${error?.message}`,
-      error
-    );
+    console.error(`dynamo_users_crud: ${error?.message}`, error);
     return callback(null, {
       statusCode: error?.statusCode ?? INTERNAL_SERVER_ERROR,
       body: JSON.stringify({ error: error.message }),
