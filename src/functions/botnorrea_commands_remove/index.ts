@@ -22,8 +22,6 @@ import { sendMessage } from "../../services/telegram";
 export const execute = async (
   body: UpdateTg
 ): Promise<{ statusCode: number; body?: string }> => {
-  const currentUser = await usersDynamoService.getById(body?.message?.from?.id);
-  
   if (body?.message?.chat?.type !== ChatTypeTg.PRIVATE) {
     await sendMessage({
       chat_id: body?.message?.chat?.id,
@@ -34,6 +32,7 @@ export const execute = async (
     return { statusCode: FORBIDDEN };
   }
 
+  const currentUser = await usersDynamoService.getById(body?.message?.from?.id);
   if (!currentUser?.apiKey) {
     await sendMessage({
       chat_id: body?.message?.chat?.id,

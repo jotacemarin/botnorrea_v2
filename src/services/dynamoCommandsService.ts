@@ -98,6 +98,7 @@ const getByApiKey = async (apiKey: string): Promise<Array<Command>> => {
 
 const create = async (params: Command): Promise<Command> => {
   const foundCommand = await get(`${params?.command}`);
+  console.log("foundCommand", foundCommand)
   if (foundCommand) {
     throw new CommandsError("Forbidden", FORBIDDEN);
   }

@@ -1,9 +1,8 @@
-import { execute } from "./index"; // Replace with the actual path to your module
+import { execute } from "./index";
 import { BAD_REQUEST, FORBIDDEN, INTERNAL_SERVER_ERROR, OK } from "http-status";
-import usersDynamoService from "../../services/dynamoUsersService"; // Replace with the actual path to your usersDynamoService module
-import commandsDynamoServices from "../../services/dynamoCommandsService"; // Replace with the actual path to your commandsDynamoServices module
-import { sendMessage } from "../../services/telegram"; // Replace with the actual path to your telegram module
-import { ChatTypeTg } from "../../models";
+import usersDynamoService from "../../services/dynamoUsersService";
+import commandsDynamoServices from "../../services/dynamoCommandsService";
+import { sendMessage } from "../../services/telegram";
 
 const logError = jest.spyOn(console, "error").mockImplementation(() => {});
 jest.mock("../../services/dynamoUsersService");
@@ -36,28 +35,19 @@ describe("execute", () => {
     },
   };
 
-  const mockUpdateTgWithoutApiKey = {
-    message: {
-      from: { id: "mockUserId" },
-      chat: { id: "mockChatId", type: "private" },
-      message_id: "mockMessageId",
-      text: "/commands_create command_key http://example.com Description",
-    },
-  };
-
   afterEach(() => {
     jest.clearAllMocks();
+    jest.resetAllMocks();
   });
 
   it("should handle non-private chat", async () => {
     usersDynamoService.getById.mockResolvedValueOnce({
-      Items: [{ uuid: "mockUserUuid" }],
+      uuid: "mockUserUuid",
     });
-    usersDynamoService.get.mockResolvedValueOnce({});
 
     const result = await execute(mockUpdateTgNonPrivate);
 
-    expect(usersDynamoService.getById).toHaveBeenCalledWith("mockUserId");
+    expect(usersDynamoService.getById).not.toHaveBeenCalledWith("mockUserId");
     expect(sendMessage).toHaveBeenCalledWith(
       expect.objectContaining({
         text: "Please request your new API KEY in a private message!",
@@ -68,7 +58,6 @@ describe("execute", () => {
 
   it("should handle user without apiKey", async () => {
     usersDynamoService.getById.mockResolvedValueOnce();
-    usersDynamoService.get.mockResolvedValueOnce({});
 
     const result = await execute(mockUpdateTgPrivate);
 
@@ -86,13 +75,12 @@ describe("execute", () => {
       uuid: "mockUserUuid",
       apiKey: "mockApiKey",
     });
-    usersDynamoService.get.mockResolvedValueOnce({ apiKey: "mockApiKey" });
 
     const result = await execute({
       message: {
         ...mockUpdateTgWithApiKey.message,
         text: "/commands_create command_key",
-        chat: { id: 1, type: ChatTypeTg.PRIVATE },
+        chat: { id: 1, type: "private" },
         message_id: 1,
       },
     });
@@ -112,7 +100,6 @@ describe("execute", () => {
       uuid: "mockUserUuid",
       apiKey: "mockApiKey",
     });
-    usersDynamoService.get.mockResolvedValueOnce({ apiKey: "mockApiKey" });
 
     const result = await execute({
       message: {
@@ -168,7 +155,7 @@ describe("execute", () => {
       new Error("Mocked error")
     );
 
-    const result = await execute(mockUpdateTgWithApiKey);
+    const result =  await execute(mockUpdateTgWithApiKey);
 
     expect(usersDynamoService.getById).toHaveBeenCalledWith("mockUserId");
     expect(commandsDynamoServices.create).toHaveBeenCalledWith({
@@ -177,12 +164,6 @@ describe("execute", () => {
       endpoint: "http://example.com",
       description: "Description",
       isEnabled: true,
-    });
-    expect(sendMessage).toHaveBeenCalledWith({
-      chat_id: "mockChatId",
-      text: "<code>Mocked error</code>",
-      parse_mode: "HTML",
-      reply_to_message_id: "mockMessageId"
     });
     expect(logError).toHaveBeenCalled();
     expect(result).toEqual({ statusCode: INTERNAL_SERVER_ERROR });

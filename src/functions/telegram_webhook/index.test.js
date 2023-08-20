@@ -21,9 +21,9 @@ describe("should execute putUser and putGroup functions and make axios post requ
   });
 
   it("group and user exists", async () => {
-    usersGetByIdSpy.mockResolvedValue({ Items: [mockFrom] });
+    usersGetByIdSpy.mockResolvedValue(mockFrom);
     usersUpdateSpy.mockResolvedValue(mockFrom);
-    groupsGetByIdSpy.mockResolvedValue({ Items: [mockChat] });
+    groupsGetByIdSpy.mockResolvedValue(mockChat);
     groupsUpdateSpy.mockResolvedValue(mockChat);
 
     const result = await execute(mockBody);
@@ -36,9 +36,9 @@ describe("should execute putUser and putGroup functions and make axios post requ
   });
 
   it("group and user does not exits", async () => {
-    usersGetByIdSpy.mockResolvedValue({ Items: [] });
+    usersGetByIdSpy.mockResolvedValue();
     usersCreateSpy.mockResolvedValue(mockFrom);
-    groupsGetByIdSpy.mockResolvedValue({ Items: [] });
+    groupsGetByIdSpy.mockResolvedValue();
     groupsCreateSpy.mockResolvedValue(mockChat);
 
     const result = await execute(mockBody);

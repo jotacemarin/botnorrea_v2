@@ -32,28 +32,25 @@ describe("execute", () => {
   });
 
   it("should handle user not found", async () => {
-    usersDynamoService.getById.mockResolvedValueOnce({ Items: [] });
+    usersDynamoService.getById.mockResolvedValueOnce(undefined);
 
     const result = await execute(mockUpdateTgPrivate);
 
     expect(usersDynamoService.getById).toHaveBeenCalledWith("mockUserId");
-    expect(result).toEqual({ statusCode: NOT_FOUND });
+    expect(result).toEqual({ statusCode: FORBIDDEN });
   });
 
   it("should handle current user not found", async () => {
-    usersDynamoService.getById.mockResolvedValueOnce({ Items: [{}] });
-    usersDynamoService.get.mockResolvedValueOnce(null);
+    usersDynamoService.getById.mockResolvedValueOnce({});
 
     const result = await execute(mockUpdateTgPrivate);
 
     expect(usersDynamoService.getById).toHaveBeenCalledWith("mockUserId");
-    expect(usersDynamoService.get).toHaveBeenCalledWith(undefined);
-    expect(result).toEqual({ statusCode: NOT_FOUND });
+    expect(result).toEqual({ statusCode: FORBIDDEN });
   });
 
   it("should handle user without apiKey", async () => {
-    usersDynamoService.getById.mockResolvedValueOnce({ Items: [mockUserItem] });
-    usersDynamoService.get.mockResolvedValueOnce({ uuid: "mockUserUuid" });
+    usersDynamoService.getById.mockResolvedValueOnce({});
 
     const result = await execute(mockUpdateTgPrivate);
 
@@ -67,11 +64,8 @@ describe("execute", () => {
   });
 
   it("should fetch and send commands", async () => {
-    usersDynamoService.getById.mockResolvedValueOnce({ Items: [mockUserItem] });
-    usersDynamoService.get.mockResolvedValueOnce(mockUserItem);
-    commandsDynamoServices.getByApiKey.mockResolvedValueOnce({
-      Items: mockCommandItems,
-    });
+    usersDynamoService.getById.mockResolvedValueOnce(mockUserItem);
+    commandsDynamoServices.getByApiKey.mockResolvedValueOnce(mockCommandItems);
 
     const result = await execute(mockUpdateTgPrivate);
 
@@ -88,8 +82,7 @@ describe("execute", () => {
   });
 
   it("should handle no commands found", async () => {
-    usersDynamoService.getById.mockResolvedValueOnce({ Items: [mockUserItem] });
-    usersDynamoService.get.mockResolvedValueOnce(mockUserItem);
+    usersDynamoService.getById.mockResolvedValueOnce(mockUserItem);
     commandsDynamoServices.getByApiKey.mockResolvedValueOnce({ Items: [] });
 
     const result = await execute(mockUpdateTgPrivate);
