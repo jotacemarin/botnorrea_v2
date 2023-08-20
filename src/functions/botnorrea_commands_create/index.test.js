@@ -3,8 +3,11 @@ import { BAD_REQUEST, FORBIDDEN, INTERNAL_SERVER_ERROR, OK } from "http-status";
 import usersDynamoService from "../../services/dynamoUsersService";
 import commandsDynamoServices from "../../services/dynamoCommandsService";
 import { sendMessage } from "../../services/telegram";
+import axios from "axios";
+
 
 const logError = jest.spyOn(console, "error").mockImplementation(() => {});
+jest.mock("axios");
 jest.mock("../../services/dynamoUsersService");
 jest.mock("../../services/dynamoCommandsService");
 jest.mock("../../services/telegram");
@@ -154,6 +157,7 @@ describe("execute", () => {
     commandsDynamoServices.create.mockRejectedValueOnce(
       new Error("Mocked error")
     );
+    logError.mockImplementationOnce(() => {})
 
     const result =  await execute(mockUpdateTgWithApiKey);
 
@@ -167,5 +171,29 @@ describe("execute", () => {
     });
     expect(logError).toHaveBeenCalled();
     expect(result).toEqual({ statusCode: INTERNAL_SERVER_ERROR });
+  });
+
+  it("should handle bad request error when endpoint to save fails", async () => {
+    usersDynamoService.getById.mockResolvedValueOnce({
+      uuid: "mockUserUuid",
+      apiKey: "mockApiKey",
+    });
+    axios.post.mockRejectedValueOnce(
+      new Error("Mocked error")
+    );
+    commandsDynamoServices.create.mockResolvedValueOnce({
+      command: "/mockCommand",
+    });
+
+    const result = await execute(mockUpdateTgWithApiKey);
+
+    expect(usersDynamoService.getById).toHaveBeenCalledWith("mockUserId");
+    expect(commandsDynamoServices.create).not.toHaveBeenCalled();
+    expect(sendMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        text: "Bad request.\n\nYour endpoint throw this message: <code>Mocked error</code>",
+      })
+    );
+    expect(result).toEqual({ statusCode: BAD_REQUEST });
   });
 });
