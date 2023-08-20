@@ -7,7 +7,7 @@ import {
   OK,
   UNAUTHORIZED,
 } from "http-status";
-import { Role, UpdateTg, User } from "../../models";
+import { FormattingOptionsTg, Role, UpdateTg, User } from "../../models";
 import usersDynamoService from "../../services/dynamoUsersService";
 import commandsDynamoServices from "../../services/dynamoCommandsService";
 import { sendMessage } from "../../services/telegram";
@@ -15,38 +15,51 @@ import { sendMessage } from "../../services/telegram";
 export const execute = async (
   body: UpdateTg
 ): Promise<{ statusCode: number; body?: string }> => {
-  const currentUser = await usersDynamoService.getById(body?.message?.from?.id);
-  if (!currentUser?.apiKey) {
+  try {
+    const currentUser = await usersDynamoService.getById(
+      body?.message?.from?.id
+    );
+    if (!currentUser?.apiKey) {
+      await sendMessage({
+        chat_id: body?.message?.chat?.id,
+        text: "You don't have an API KEY please create one first using the command /create_api_key!",
+        reply_to_message_id: body?.message?.message_id,
+      });
+
+      return { statusCode: FORBIDDEN };
+    }
+
+    const commands = await commandsDynamoServices.getByApiKey(
+      currentUser?.apiKey
+    );
+    if (!commands?.length) {
+      await sendMessage({
+        chat_id: body?.message?.chat?.id,
+        text: "Not found",
+        reply_to_message_id: body?.message?.message_id,
+      });
+
+      return { statusCode: NOT_FOUND };
+    }
+
     await sendMessage({
       chat_id: body?.message?.chat?.id,
-      text: "You don't have an API KEY please create one first using the command /create_api_key!",
+      text: commands
+        .map((item) => `${item?.command} - ${item?.description}`)
+        .join("\n"),
       reply_to_message_id: body?.message?.message_id,
     });
-
-    return { statusCode: FORBIDDEN };
-  }
-
-  const commands = await commandsDynamoServices.getByApiKey(
-    currentUser?.apiKey
-  );
-  if (!commands?.length) {
+    return { statusCode: OK };
+  } catch (error) {
+    console.error(`botnorrea_commands_list.execute: ${error?.message}`, error);
     await sendMessage({
       chat_id: body?.message?.chat?.id,
-      text: "Not found",
+      text: `<code>${error?.message}</code>`,
       reply_to_message_id: body?.message?.message_id,
+      parse_mode: FormattingOptionsTg.HTML,
     });
-
-    return { statusCode: NOT_FOUND };
+    return { statusCode: INTERNAL_SERVER_ERROR };
   }
-
-  await sendMessage({
-    chat_id: body?.message?.chat?.id,
-    text: commands
-      .map((item) => `${item?.command} - ${item?.description}`)
-      .join("\n"),
-    reply_to_message_id: body?.message?.message_id,
-  });
-  return { statusCode: OK };
 };
 
 export const botnorreaCommandsList = async (

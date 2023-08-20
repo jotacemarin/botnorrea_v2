@@ -50,6 +50,10 @@ const post = async (params: Command, user: User) => {
 
   const command: Command = {
     ...params,
+    command: params?.command
+      ?.replace(/\//gi, "")
+      ?.replace(/-/gi, "_")
+      ?.toLowerCase(),
     isEnabled: true,
     apiKey: user?.apiKey,
   };

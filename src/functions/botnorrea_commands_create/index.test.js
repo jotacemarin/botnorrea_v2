@@ -157,6 +157,7 @@ describe("execute", () => {
     commandsDynamoServices.create.mockRejectedValueOnce(
       new Error("Mocked error")
     );
+    logError.mockImplementationOnce(() => {})
 
     const result =  await execute(mockUpdateTgWithApiKey);
 
