@@ -1,10 +1,17 @@
-import { execute } from "./index";
-import { BAD_REQUEST, FORBIDDEN, INTERNAL_SERVER_ERROR, OK } from "http-status";
+// @ts-nocheck
+
+import {
+  BAD_REQUEST,
+  FORBIDDEN,
+  INTERNAL_SERVER_ERROR,
+  OK,
+  UNAUTHORIZED,
+} from "http-status";
+import axios from "axios";
 import usersDynamoService from "../../services/dynamoUsersServices";
 import commandsDynamoServices from "../../services/dynamoCommandsServices";
 import { sendMessage } from "../../services/telegram";
-import axios from "axios";
-
+import { botnorreaCommandsCreate, execute } from "./index";
 
 const logError = jest.spyOn(console, "error").mockImplementation(() => {});
 jest.mock("axios");
@@ -149,6 +156,42 @@ describe("execute", () => {
     expect(result).toEqual({ statusCode: OK });
   });
 
+  it("should create a command successfully without description", async () => {
+    usersDynamoService.getById.mockResolvedValueOnce({
+      uuid: "mockUserUuid",
+      apiKey: "mockApiKey",
+    });
+    commandsDynamoServices.create.mockResolvedValueOnce({
+      command: "/mockCommand",
+    });
+
+    const result = await execute({
+      message: {
+        from: { id: "mockUserId" },
+        chat: { id: "mockChatId", type: "private" },
+        message_id: "mockMessageId",
+        text: "/commands_create command_key http://example.com",
+      },
+    });
+
+    expect(usersDynamoService.getById).toHaveBeenCalledWith("mockUserId");
+    expect(commandsDynamoServices.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        apiKey: "mockApiKey",
+        command: "/command_key",
+        endpoint: "http://example.com",
+        description: "",
+        isEnabled: true,
+      })
+    );
+    expect(sendMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        text: "Command /mockCommand created successfuly!",
+      })
+    );
+    expect(result).toEqual({ statusCode: OK });
+  });
+
   it("should handle internal server error", async () => {
     usersDynamoService.getById.mockResolvedValueOnce({
       id: "mockUserId",
@@ -157,9 +200,9 @@ describe("execute", () => {
     commandsDynamoServices.create.mockRejectedValueOnce(
       new Error("Mocked error")
     );
-    logError.mockImplementationOnce(() => {})
+    logError.mockImplementationOnce(() => {});
 
-    const result =  await execute(mockUpdateTgWithApiKey);
+    const result = await execute(mockUpdateTgWithApiKey);
 
     expect(usersDynamoService.getById).toHaveBeenCalledWith("mockUserId");
     expect(commandsDynamoServices.create).toHaveBeenCalledWith({
@@ -178,9 +221,7 @@ describe("execute", () => {
       uuid: "mockUserUuid",
       apiKey: "mockApiKey",
     });
-    axios.post.mockRejectedValueOnce(
-      new Error("Mocked error")
-    );
+    axios.post.mockRejectedValueOnce(new Error("Mocked error"));
     commandsDynamoServices.create.mockResolvedValueOnce({
       command: "/mockCommand",
     });
@@ -195,5 +236,209 @@ describe("execute", () => {
       })
     );
     expect(result).toEqual({ statusCode: BAD_REQUEST });
+  });
+});
+
+describe("botnorreaCommandsCreate", () => {
+  const mockUpdateTgWithApiKey = {
+    message: {
+      from: { id: "mockUserId" },
+      chat: { id: "mockChatId", type: "private" },
+      message_id: "mockMessageId",
+      text: "/commands_create command_key http://example.com Description",
+    },
+  };
+
+  afterEach(() => {
+    jest.clearAllMocks();
+    jest.resetAllMocks();
+  });
+
+  it("should handle unauthorized", async () => {
+    const mockCallback = jest.fn();
+    usersDynamoService.get.mockResolvedValueOnce({
+      uuid: "mockUserUuid",
+      role: "ROOT",
+    });
+
+    await expect(
+      botnorreaCommandsCreate(
+        {
+          queryStringParameters: {
+            id: "mockUserId",
+            apiKey: "mockApiKey",
+          },
+          body: "{}",
+        },
+        {},
+        mockCallback
+      )
+    ).resolves.toBeUndefined();
+
+    expect(mockCallback).toHaveBeenCalledWith(null, {
+      statusCode: UNAUTHORIZED,
+    });
+  });
+
+  it("should handle bad request without body", async () => {
+    const mockCallback = jest.fn();
+    usersDynamoService.get.mockResolvedValueOnce({
+      uuid: "mockUserUuid",
+      role: "ROOT",
+      apiKey: "mockApiKey",
+    });
+
+    await expect(
+      botnorreaCommandsCreate(
+        {
+          queryStringParameters: {
+            id: "mockUserId",
+            apiKey: "mockApiKey",
+          },
+        },
+        {},
+        mockCallback
+      )
+    ).resolves.toBeUndefined();
+
+    expect(mockCallback).toHaveBeenCalledWith(null, {
+      statusCode: BAD_REQUEST,
+    });
+  });
+
+  it("should handle bad request without one string paramater", async () => {
+    const mockCallback = jest.fn();
+    usersDynamoService.get.mockResolvedValueOnce({
+      uuid: "mockUserUuid",
+      role: "ROOT",
+      apiKey: "mockApiKey",
+    });
+
+    await expect(
+      botnorreaCommandsCreate(
+        {
+          queryStringParameters: {
+            apiKey: "mockApiKey",
+          },
+          body: "{}",
+        },
+        {},
+        mockCallback
+      )
+    ).resolves.toBeUndefined();
+
+    expect(mockCallback).toHaveBeenCalledWith(null, {
+      statusCode: BAD_REQUEST,
+    });
+  });
+
+  it("should handle bad request without another string paramater", async () => {
+    const mockCallback = jest.fn();
+    usersDynamoService.get.mockResolvedValueOnce({
+      uuid: "mockUserUuid",
+      role: "ROOT",
+      apiKey: "mockApiKey",
+    });
+
+    await expect(
+      botnorreaCommandsCreate(
+        {
+          queryStringParameters: {
+            id: "mockUserId",
+          },
+          body: "{}",
+        },
+        {},
+        mockCallback
+      )
+    ).resolves.toBeUndefined();
+
+    expect(mockCallback).toHaveBeenCalledWith(null, {
+      statusCode: BAD_REQUEST,
+    });
+  });
+
+  it("should handle bad request without queryStringParameters", async () => {
+    const mockCallback = jest.fn();
+    usersDynamoService.get.mockResolvedValueOnce({
+      uuid: "mockUserUuid",
+      role: "ROOT",
+    });
+
+    await expect(
+      botnorreaCommandsCreate(
+        {
+          body: "{}",
+        },
+        {},
+        mockCallback
+      )
+    ).resolves.toBeUndefined();
+
+    expect(mockCallback).toHaveBeenCalledWith(null, {
+      statusCode: BAD_REQUEST,
+    });
+  });
+
+  it("should handle ok status code", async () => {
+    const mockCallback = jest.fn();
+    usersDynamoService.get.mockResolvedValueOnce({
+      uuid: "mockUserUuid",
+      role: "ROOT",
+      apiKey: "mockApiKey",
+    });
+    usersDynamoService.getById.mockResolvedValueOnce({ apiKey: "mockApiKey" });
+
+    await expect(
+      botnorreaCommandsCreate(
+        {
+          queryStringParameters: {
+            id: "mockUserId",
+            apiKey: "mockApiKey",
+          },
+          body: JSON.stringify(mockUpdateTgWithApiKey),
+        },
+        {},
+        mockCallback
+      )
+    ).resolves.toBeUndefined();
+
+    expect(usersDynamoService.get).toHaveBeenCalledWith("mockUserId");
+    expect(mockCallback).toHaveBeenCalledWith(null, {
+      statusCode: OK,
+    });
+  });
+
+  it("should handle internal server error", async () => {
+    const mockCallback = jest.fn();
+    usersDynamoService.get.mockResolvedValueOnce({
+      uuid: "mockUserUuid",
+      role: "ROOT",
+      apiKey: "mockApiKey",
+    });
+    usersDynamoService.getById.mockResolvedValueOnce({ apiKey: "mockApiKey" });
+    mockCallback.mockImplementationOnce(() => {
+      throw new Error("Mock callback error");
+    });
+    mockCallback.mockImplementationOnce(jest.fn());
+
+    await expect(
+      botnorreaCommandsCreate(
+        {
+          queryStringParameters: {
+            id: "mockUserId",
+            apiKey: "mockApiKey",
+          },
+          body: JSON.stringify(mockUpdateTgWithApiKey),
+        },
+        {},
+        mockCallback
+      )
+    ).resolves.toBeUndefined();
+
+    expect(usersDynamoService.get).toHaveBeenCalledWith("mockUserId");
+    expect(usersDynamoService.getById).toHaveBeenCalledWith("mockUserId");
+    expect(logError).toHaveBeenCalled();
+    expect(mockCallback).toHaveBeenCalledTimes(2);
   });
 });

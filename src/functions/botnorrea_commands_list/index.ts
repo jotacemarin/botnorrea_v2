@@ -7,7 +7,7 @@ import {
   OK,
   UNAUTHORIZED,
 } from "http-status";
-import { FormattingOptionsTg, Role, UpdateTg, User } from "../../models";
+import { FormattingOptionsTg, Role, UpdateTg } from "../../models";
 import usersDynamoService from "../../services/dynamoUsersServices";
 import commandsDynamoServices from "../../services/dynamoCommandsServices";
 import { sendMessage } from "../../services/telegram";
@@ -67,9 +67,13 @@ export const botnorreaCommandsList = async (
   _context: Context,
   callback: Callback
 ): Promise<void> => {
-  try {
-    const { id, apiKey } = event?.queryStringParameters ?? {};
+  const { id, apiKey } = event?.queryStringParameters ?? {};
 
+  if (!id || !apiKey || !event?.body) {
+    return callback(null, { statusCode: BAD_REQUEST });
+  }
+
+  try {
     const botUser = await usersDynamoService.get(`${id}`);
     if (
       !botUser?.role ||
@@ -82,10 +86,6 @@ export const botnorreaCommandsList = async (
     return callback(null, { statusCode: UNAUTHORIZED });
   }
 
-  if (!event?.body) {
-    return callback(null, { statusCode: BAD_REQUEST });
-  }
-
   try {
     const body = JSON.parse(event?.body);
     const response = await execute(body);
@@ -94,7 +94,7 @@ export const botnorreaCommandsList = async (
     console.error(`botnorrea_commands_create: ${error?.message}`, error);
     return callback(error, {
       statusCode: INTERNAL_SERVER_ERROR,
-      body: error.message,
+      body: error?.message,
     });
   }
 };
