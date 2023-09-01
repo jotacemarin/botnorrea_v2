@@ -8,7 +8,6 @@ import {
   CREATED,
   NO_CONTENT,
   UNAUTHORIZED,
-  FORBIDDEN,
   BAD_REQUEST,
 } from "http-status";
 import { Command, Role, User } from "../../models";
@@ -114,11 +113,18 @@ export const dynamoDBCommandsCrud = async (
       return callback(null, { statusCode: UNAUTHORIZED });
     }
 
-    const body =
-      pathParameters && pathParameters?.id
-        ? { uuid: pathParameters?.id }
-        : JSON.parse(bodyString ?? "{}");
+    let body = {};
+
+    if (pathParameters && pathParameters?.id) {
+      body = { uuid: pathParameters?.id };
+    }
+
+    if (bodyString && bodyString?.trim() !== "") {
+      body = JSON.parse(bodyString);
+    }
+
     const response = await methods[httpMethod](body, user);
+
     return callback(null, { statusCode: OK, ...response });
   } catch (error) {
     console.error(
