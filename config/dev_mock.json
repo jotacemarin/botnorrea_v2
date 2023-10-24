@@ -6,7 +6,7 @@
     "name": "aws",
     "runtime": "nodejs18.x",
     "stage": "",
-    "region": "",
+    "region": "us-east-1",
     "environment": {
       "BOT_NAME": "botnorrea-v2",
       "BOT_DOMAIN": "🐸🐶☠️",

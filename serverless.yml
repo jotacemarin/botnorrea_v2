@@ -1,5 +1,6 @@
 plugins:
   - serverless-esbuild
+  - ./plugins/stacks_outputs.js
 
 custom:
   secrets: ${file(./config/${opt:stage, 'dev'}.json)}
@@ -39,6 +40,7 @@ resources:
   - ${file(./src/resources/dynamodb-users-table.yml)}
   - ${file(./src/resources/dynamodb-groups-table.yml)}
   - ${file(./src/resources/dynamodb-commands-table.yml)}
+  - ${file(./src/resources/outputs.yml)}
 
 functions:
   authorizer: ${file(./src/functions/authorizer/function.yml)}
