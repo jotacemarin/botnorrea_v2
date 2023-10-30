@@ -32,12 +32,12 @@ class CommandsError extends Error {
 }
 
 const hasAuthorization = (apiKey: string, user: User) => {
-  if (!user?.apiKey) {
+  if (!user?.apiKey || !user?.role) {
     return false;
   }
 
-  if (![Role.ROOT, Role.ADMIN]) {
-    return true;
+  if (![Role.ROOT, Role.ADMIN].includes(user?.role)) {
+    return false;
   }
 
   return apiKey === user?.apiKey;

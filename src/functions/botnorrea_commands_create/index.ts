@@ -14,8 +14,8 @@ import {
   Role,
   UpdateTg,
 } from "../../models";
-import usersDynamoService from "../../services/dynamoUsersService";
-import commandsDynamoServices from "../../services/dynamoCommandsService";
+import usersDynamoService from "../../services/dynamoUsersServices";
+import commandsDynamoServices from "../../services/dynamoCommandsServices";
 import { sendMessage } from "../../services/telegram";
 
 const mockUpdate = {
@@ -131,7 +131,7 @@ export const execute = async (
         ?.replace(/-/gi, "_")
         ?.toLowerCase()}`,
       endpoint: endpoint,
-      description: description.join(" ") ?? "",
+      description: description.join(" "),
       isEnabled: true,
     });
     await sendMessage({
@@ -161,9 +161,13 @@ export const botnorreaCommandsCreate = async (
   _context: Context,
   callback: Callback
 ): Promise<void> => {
-  try {
-    const { id, apiKey } = event?.queryStringParameters ?? {};
+  const { id, apiKey } = event?.queryStringParameters ?? {};
 
+  if (!id || !apiKey || !event?.body) {
+    return callback(null, { statusCode: BAD_REQUEST });
+  }
+
+  try {
     const botUser = await usersDynamoService.get(`${id}`);
     if (
       !botUser?.role ||
@@ -174,10 +178,6 @@ export const botnorreaCommandsCreate = async (
     }
   } catch (error) {
     return callback(null, { statusCode: UNAUTHORIZED });
-  }
-
-  if (!event?.body) {
-    return callback(null, { statusCode: BAD_REQUEST });
   }
 
   try {

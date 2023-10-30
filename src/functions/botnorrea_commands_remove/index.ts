@@ -15,8 +15,8 @@ import {
   UpdateTg,
   User,
 } from "../../models";
-import usersDynamoService from "../../services/dynamoUsersService";
-import commandsDynamoServices from "../../services/dynamoCommandsService";
+import usersDynamoService from "../../services/dynamoUsersServices";
+import commandsDynamoServices from "../../services/dynamoCommandsServices";
 import { sendMessage } from "../../services/telegram";
 
 export const execute = async (
@@ -51,7 +51,7 @@ export const execute = async (
       .trim()
       .split(" ");
 
-    if (parameters.length < 1) {
+    if (parameters.join(" ") === "") {
       await sendMessage({
         chat_id: body?.message?.chat?.id,
         text: "Bad request.\n\nCommand usage: <code>/commands_create command_key url description*</code>\n\n<i>*description is optional</i>",
@@ -117,6 +117,10 @@ export const botnorreaCommandsRemove = async (
   try {
     const { id, apiKey } = event?.queryStringParameters ?? {};
 
+    if (!id || !apiKey || !event?.body) {
+      return callback(null, { statusCode: BAD_REQUEST });
+    }
+
     const botUser = await usersDynamoService.get(`${id}`);
     if (
       !botUser?.role ||
@@ -127,10 +131,6 @@ export const botnorreaCommandsRemove = async (
     }
   } catch (error) {
     return callback(null, { statusCode: UNAUTHORIZED });
-  }
-
-  if (!event?.body) {
-    return callback(null, { statusCode: BAD_REQUEST });
   }
 
   try {

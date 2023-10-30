@@ -9,7 +9,7 @@ import {
   OK,
 } from "http-status";
 import { Role, User } from "../../models";
-import usersDynamoService from "../../services/dynamoUsersService";
+import usersDynamoService from "../../services/dynamoUsersServices";
 
 const get = async ({ uuid }: { uuid: string | number }) => {
   const Item = await usersDynamoService.get(uuid);
@@ -60,11 +60,19 @@ export const dynamoDBUsersCrud = async (
 
     const contextCustom = event?.requestContext?.authorizer ?? {};
     const user: User = JSON.parse(contextCustom["Botnorrea-v2"] ?? "{}");
-    const canEditAsAdmin = user?.role && [Role.ROOT, Role.ADMIN].includes(user?.role);
+    const canEditAsAdmin =
+      user?.role && [Role.ROOT, Role.ADMIN].includes(user?.role);
 
-    const body = pathParameters && pathParameters?.id
-      ? { uuid: pathParameters?.id }
-      : JSON.parse(bodyString ?? "{}");
+    let body = {};
+
+    if (pathParameters && pathParameters?.id) {
+      body = { uuid: pathParameters?.id };
+    }
+
+    if (bodyString && bodyString?.trim() !== "") {
+      body = JSON.parse(bodyString);
+    }
+
     const response = await methods[httpMethod](body, canEditAsAdmin);
 
     return callback(null, { statusCode: OK, ...response });

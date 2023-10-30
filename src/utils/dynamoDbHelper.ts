@@ -3,7 +3,7 @@ export const buildExpressions = (object: JSON | Object | any) => {
   const UpdateExpression: Array<string> = [];
   const ExpressionAttributeNames: Object = {};
   for (const [key, value] of Object.entries(object)) {
-    if (value !== null || value !== undefined) {
+    if (value !== null && value !== undefined) {
       const attrValue: string = `:${key}`;
       const attrName: string = `#${key}`;
       ExpressionAttributeValues[attrValue] = value;

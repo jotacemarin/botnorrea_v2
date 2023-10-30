@@ -3,7 +3,7 @@ import {
   APIGatewayTokenAuthorizerEvent,
 } from "aws-lambda";
 import { User } from "../../models";
-import usersDynamoService from "../../services/dynamoUsersService";
+import usersDynamoService from "../../services/dynamoUsersServices";
 
 export const buildPolicy = (
   methodArn: string,
@@ -42,12 +42,11 @@ export const authorizer = async (
   const start = new Date().getTime();
   try {
     const [_, basicToken] = event?.authorizationToken?.split(" ");
-    return execute(basicToken, event?.methodArn);
+    const policy = await execute(basicToken, event?.methodArn);
+    console.log(`authorizer time: ${Date.now() - start}ms`);
+    return policy;
   } catch (error) {
-    console.error(`authorizer: ${error?.message}`, error);
+    console.error(`authorizer: ${error?.message}; time: ${Date.now() - start}ms`, error);
     return buildPolicy(event?.methodArn);
-  } finally {
-    const end = new Date().getTime();
-    console.log(`authorizer time: ${end - start}ms`);
   }
 };

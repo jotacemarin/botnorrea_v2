@@ -1,21 +1,16 @@
-import * as dynamobdServices from "./dynamodb";
-import groupsCommandsService from "./dynamoCommandsService";
+// @ts-nocheck
 
-process.env.DYNAMODB_TABLE_COMMANDS = "Commands-Groups";
+import * as dynamobdServices from "./dynamodb";
+import groupsDynamoService from "./dynamoGroupsServices";
+
+process.env.DYNAMODB_TABLE_GROUPS = "Table-Groups";
 
 const getSpy = jest.spyOn(dynamobdServices, "getCommand");
 const putSpy = jest.spyOn(dynamobdServices, "putCommand");
 const updateSpy = jest.spyOn(dynamobdServices, "updateCommand");
 const scanSpy = jest.spyOn(dynamobdServices, "scanCommand");
 
-const paramsTest = {
-  uuid: 123,
-  command: "commandMock",
-  endpoint: "endpointMock",
-  description: "descriptionMock",
-  isEnabled: true,
-  apiKey: "apiKeyMock",
-};
+const paramsTest = { uuid: 123, id: 123, title: "test" };
 
 describe("DynamoDB commands", () => {
   beforeEach(() => {
@@ -26,23 +21,44 @@ describe("DynamoDB commands", () => {
 
   afterEach(() => {
     jest.clearAllMocks();
-    jest.resetAllMocks();
   });
 
   it("should execute get", async () => {
-    await expect(groupsCommandsService.get("test")).resolves.toBeTruthy();
+    await expect(groupsDynamoService.get("test")).resolves.toBeTruthy();
     expect(getSpy).toHaveBeenCalled();
   });
 
+  it("should execute getById", async () => {
+    scanSpy.mockImplementation(
+      jest.fn(() => Promise.resolve({ Items: [paramsTest] }))
+    );
+
+    await expect(groupsDynamoService.getById(123)).resolves.toBeTruthy();
+  });
+
+  it("should execute getById returns undefined", async () => {
+    scanSpy.mockImplementation(jest.fn(() => Promise.resolve({ Items: [] })));
+
+    await expect(groupsDynamoService.getById(123)).resolves.toBeUndefined();
+  });
+
+  it("should execute getById throws Unprocessable entity", async () => {
+    scanSpy.mockImplementation(
+      jest.fn(() => Promise.resolve({ Items: [{}, {}] }))
+    );
+
+    await expect(groupsDynamoService.getById(123)).rejects.toThrowError(
+      "Unprocessable entity"
+    );
+  });
+
   it("should execute create", async () => {
-    getSpy.mockImplementationOnce(jest.fn(() => Promise.resolve({})));
-    // scanSpy.mockImplementationOnce(jest.fn(() => Promise.resolve({ Items: [] })));
-    // getSpy.mockImplementationOnce(jest.fn(() => Promise.resolve()));
-    putSpy.mockImplementation(jest.fn());
-    getSpy.mockImplementationOnce(jest.fn(() => Promise.resolve({ Item: paramsTest })));
+    putSpy.mockImplementation(
+      jest.fn(() => Promise.resolve({ Item: paramsTest }))
+    );
 
     await expect(
-      groupsCommandsService.create(paramsTest)
+      groupsDynamoService.create(paramsTest, false)
     ).resolves.toBeTruthy();
 
     expect(putSpy).toHaveBeenCalled();
@@ -53,7 +69,7 @@ describe("DynamoDB commands", () => {
     updateSpy.mockImplementation(jest.fn(() => Promise.resolve()));
 
     await expect(
-      groupsCommandsService.update(paramsTest, { apiKey: "apiKeyMock" })
+      groupsDynamoService.update(paramsTest, false)
     ).resolves.toBeTruthy();
 
     expect(updateSpy).toHaveBeenCalled();
@@ -65,19 +81,11 @@ describe("DynamoDB commands", () => {
     const userParamsTest = { ...paramsTest, uuid: undefined };
 
     await expect(
-      groupsCommandsService.update(userParamsTest, false)
+      groupsDynamoService.update(userParamsTest, false)
     ).rejects.toThrowError("Bad request");
 
     expect(updateSpy).not.toHaveBeenCalled();
     expect(getSpy).not.toHaveBeenCalled();
-  });
-
-  it("should execute getByUuid", async () => {
-    scanSpy.mockImplementation(
-      jest.fn(() => Promise.resolve({ Items: [paramsTest] }))
-    );
-
-    await expect(groupsCommandsService.getByUuid(123)).resolves.toBeTruthy();
   });
 });
 
@@ -93,7 +101,7 @@ describe("DynamoDb update fails", () => {
     updateSpy.mockImplementation(jest.fn(() => Promise.resolve()));
 
     await expect(
-      groupsCommandsService.update(paramsTest, false)
+      groupsDynamoService.update(paramsTest, false)
     ).rejects.toThrowError("Not found");
 
     expect(updateSpy).not.toHaveBeenCalled();
@@ -103,13 +111,13 @@ describe("DynamoDb update fails", () => {
   it("should execute update throws Bad gateway", async () => {
     getSpy.mockImplementation(
       jest.fn(() =>
-        Promise.resolve({ Item: { ...paramsTest, command: undefined } })
+        Promise.resolve({ Item: { ...paramsTest, uuid: undefined } })
       )
     );
     updateSpy.mockImplementation(jest.fn(() => Promise.resolve()));
 
     await expect(
-      groupsCommandsService.update(paramsTest, false)
+      groupsDynamoService.update(paramsTest, false)
     ).rejects.toThrowError("Bad gateway");
 
     expect(updateSpy).not.toHaveBeenCalled();
